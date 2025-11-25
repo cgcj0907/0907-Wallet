@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { savePasswordHash } from '../lib/storagePassword';
+import { initDefaultNetworks } from '@/app/networkManage/lib/storage'
 import { hashPassword } from '@/app/lib/hash';
 
 
@@ -67,6 +68,7 @@ export default function Register() {
       setPassword('');
       setConfirmPassword('');
       localStorage.setItem('isLogined', '0');
+      await initDefaultNetworks();
       router.push('/generateWallet');
     } catch (err) {
       console.error(err);
