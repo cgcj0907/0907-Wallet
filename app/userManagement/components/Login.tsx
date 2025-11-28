@@ -87,8 +87,10 @@ export default function Login() {
 
         // 若未缓存当前地址，则从 IndexedDB 读取第一个地址作为默认
         if (!localStorage.getItem('currentAddress')) {
-          const addressRecord: AddressRecord = await getAddress(0);
-          localStorage.setItem('currentAddress', addressRecord.address);
+          const addressRecord: AddressRecord | undefined = await getAddress(0);
+          if (addressRecord?.address) {
+            localStorage.setItem('currentAddress', addressRecord.address);
+          }
         }
 
         setPassword('');
@@ -140,9 +142,8 @@ export default function Login() {
       <button
         onClick={handleLogin}
         disabled={loading}
-        className={`w-full py-2 text-white font-medium rounded transition-colors ${
-          loading ? 'bg-blue-300 cursor-wait' : 'bg-blue-500 hover:bg-blue-600'
-        }`}
+        className={`w-full py-2 text-white font-medium rounded transition-colors ${loading ? 'bg-blue-300 cursor-wait' : 'bg-blue-500 hover:bg-blue-600'
+          }`}
       >
         {loading ? '验证中...' : '登录'}
       </button>

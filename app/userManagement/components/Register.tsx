@@ -109,7 +109,7 @@ export default function Register() {
       setConfirmPassword('');
       localStorage.setItem('isLoggedIn', '0'); // 标记为“未登录”状态，需后续完成钱包创建才真正登录
 
-      router.push('/walletManagement');
+      router.replace('/walletManagement');
     } catch (err) {
       console.error('注册流程异常:', err);
       setMessage('设置失败，请重试！');

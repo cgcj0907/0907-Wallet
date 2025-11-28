@@ -22,7 +22,7 @@ interface AuthGuardProps {
 }
 
 // 公开路径：无需登录即可访问
-const PUBLIC_PATHS = ['/userManagement'] as const;
+const PUBLIC_PATHS = ['/userManagement', '/walletManagement'] as const;
 
 // 钱包存储表名（避免魔法值）
 const WALLETS_STORE_NAME = 'Wallets';
