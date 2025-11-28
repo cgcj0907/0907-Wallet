@@ -73,6 +73,6 @@ export async function hasNetwork(name: string): Promise<boolean> {
   return !!val;
 }
 
-export async function getNetwork(name: string="ethereum"): Promise<Network> {
+export async function getNetwork(name: string="ethereum"): Promise<Network | undefined> {
   return await get(name, NETWORK_TABLE);
 }

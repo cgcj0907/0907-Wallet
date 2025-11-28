@@ -1,9 +1,9 @@
 'use client';
 
-import { Network, getAllNetworks } from '@/app/networkManage/lib/storage';
+import { Network, getAllNetworks } from '@/app/networkManagement/lib/saveNetwork';
 import { useEffect, useState } from 'react';
-import { getBalance } from '@/app/chainInteract/lib/account';
-import { getPrice } from '@/app/chainInteract/lib/network';
+import { getBalance } from '@/app/chainInteraction/lib/account';
+import { getPrice } from '@/app/chainInteraction/lib/network';
 
 export default function TokenCard({ address }: { address: string }) {
   const [networks, setNetworks] = useState<Network[]>([]);

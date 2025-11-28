@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { getNetwork } from '@/app/networkManage/lib/storage';
+import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 import Avatar from 'boring-avatars';
 /* 打开区块链浏览器 */
 const openExplorer = async (addr?: string) => {

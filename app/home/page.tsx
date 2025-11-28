@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAddress } from '@/app/generateWallet/lib/saveAddress';
+import { getAddress } from '@/app/walletManagement/lib/saveAddress';
 
 import MainCard from './components/MainCard';
 import NetworkCard from './components/NetworkCard';

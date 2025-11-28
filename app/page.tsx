@@ -1,6 +1,6 @@
 'use client';
 
-import UserLogin from './userLogin/page';
+import UserLogin from './userManagement/page';
 
 export default function Page() {
   return <UserLogin />;

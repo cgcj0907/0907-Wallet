@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getTransactions } from '@/app/chainInteract/lib/transaction';
+import { getTransactions } from '@/app/chainInteraction/lib/transaction';
 import Avatar from 'boring-avatars';
 
 const explorerMap: Record<string, string> = {

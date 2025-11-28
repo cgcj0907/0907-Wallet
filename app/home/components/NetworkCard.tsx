@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAllNetworkNames } from '@/app/networkManage/lib/storage';
+import { getAllNetworkNames } from '@/app/networkManagement/lib/saveNetwork';
 
 
 

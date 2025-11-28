@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPrice } from '@/app/chainInteract/lib/network';
-import { getBalance } from '@/app/chainInteract/lib/account';
-import { getNetwork } from '@/app/networkManage/lib/storage';
+import { getPrice } from '@/app/chainInteraction/lib/network';
+import { getBalance } from '@/app/chainInteraction/lib/account';
+import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 
 export default function MainCard({ address, network }: { address: string, network: string | null }) {
     const [balance, setBalance] = useState<string>('0.0');

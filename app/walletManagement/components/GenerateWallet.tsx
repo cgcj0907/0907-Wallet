@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { generateWallet, WalletResult } from '../lib/generateWallet';
 import { encryptWallet } from '../lib/cryptoWallet';
 import { saveWallet } from '../lib/saveWallet';
-import { getUserRecord } from '@/app/userLogin/lib/storagePassword';
-import { hashPassword } from '@/app/lib/hash';
+import { getUserRecord } from '@/app/userManagement/lib/savePassword';
+import { hashPassword } from '@/app/lib/transform';
 import { saveAddress } from '../lib/saveAddress';
 import { AddressRecord } from '../lib/saveAddress';
 
@@ -27,7 +27,7 @@ export default function GenerateWallet() {
 
     const userRecord = await getUserRecord();
     if (!userRecord) {
-      router.replace('/userLogin');
+      router.replace('/userManagement');
       return;
     }
 
@@ -152,7 +152,7 @@ export default function GenerateWallet() {
         <div className="mb-4">
           <p className="mb-4 text-center text-green-700">{status || '钱包已生成'}</p>
           <button
-            onClick={() => router.push('/userLogin')}
+            onClick={() => router.push('/userManagement')}
             className="w-full py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors"
           >
             前往登录

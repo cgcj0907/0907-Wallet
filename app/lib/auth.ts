@@ -1,13 +1,23 @@
 // app/lib/auth.ts
+/**
+ * @file 钱包认证与账户管理核心模块
+ * @description 负责钱包连接、签名验证、登录状态持久化、登出等完整认证流程
+ *              支持 MetaMask、WalletConnect、Coinbase Wallet 等主流钱包
+ * @author Guangyang Zhong | github: https://github.com/cgcj0907
+ * @date 2025-08-16
+ */
+
 export const LOGIN_FLAG_KEY = 'isLoggedIn';
 export const LOGIN_EXPIRES_KEY = 'loginExpiresAt';
 const DEFAULT_EXPIRE_MINUTES = 10;
 
+/**获取过期时间 */
 export function getLoginExpiresAt(): number | null {
   const v = localStorage.getItem(LOGIN_EXPIRES_KEY);
   return v ? Number(v) : null;
 }
 
+/**检查登录状态是否合法 */
 export function isLoggedInLocal(): boolean {
   const flag = localStorage.getItem(LOGIN_FLAG_KEY);
   const expires = getLoginExpiresAt();
