@@ -22,7 +22,7 @@ interface AuthGuardProps {
 }
 
 // 公开路径：无需登录即可访问
-const PUBLIC_PATHS = ['/userManagement', '/walletManagement'] as const;
+const PUBLIC_PATHS = ['/userManagement'] as const;
 
 // 钱包存储表名（避免魔法值）
 const WALLETS_STORE_NAME = 'Wallets';
@@ -68,7 +68,7 @@ export default function AuthGuard({ children }: AuthGuardProps): React.ReactElem
           // count 返回 number，0 表示无钱包
           const hasWallet = walletCount > 0;
 
-          if (!hasWallet && pathname !== 'walletManagement') {
+          if (!hasWallet) {
             router.replace('/walletManagement');
             if (isMounted) setIsChecking(false);
             return;
@@ -77,7 +77,9 @@ export default function AuthGuard({ children }: AuthGuardProps): React.ReactElem
 
         // Step 3: 全部通过 → 刷新登录有效期并放行
         if (isMounted) {
-          auth.refreshLoginExpiry(); // 延长本地登录态过期时间
+          if (localStorage.getItem('isLoggedIn') === '1') {
+            auth.refreshLoginExpiry(); // 延长本地登录态过期时间
+          }
           setIsChecking(false);
         }
       } catch (error) {
