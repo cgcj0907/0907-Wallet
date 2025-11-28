@@ -207,7 +207,20 @@ export default function TransactionCard({
                   <div className="flex items-start gap-3 w-full">
 
                     <div className="text-sm">
-                      <div className="text-xs text-sky-600">From</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-sky-600">From</div>
+                        <Avatar
+                          name={tx.from}
+                          size={30}
+                          variant="beam"
+                          colors={[
+                            "#FFFFFF", // white
+                            "#E3F2FD", // very light blue
+                            "#90CAF9", // soft blue
+                            "#42A5F5", // main bright blue
+                            "#1E88E5"  // deep blue
+                          ]} />
+                      </div>
                       <div className="text-sm font-medium">{tx.from}</div>
                     </div>
                   </div>
@@ -215,7 +228,20 @@ export default function TransactionCard({
                   <div className="flex items-start gap-3 w-full">
 
                     <div className="text-sm">
-                      <div className="text-xs text-sky-600">To</div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-xs text-sky-600">To</div>
+                        <Avatar
+                          name={tx.to}
+                          size={30}
+                          variant="beam"
+                          colors={[
+                            "#FFFFFF", // white
+                            "#E3F2FD", // very light blue
+                            "#90CAF9", // soft blue
+                            "#42A5F5", // main bright blue
+                            "#1E88E5"  // deep blue
+                          ]} />
+                      </div>
                       <div className="text-sm font-medium">{tx.to}</div>
                     </div>
                   </div>
@@ -228,9 +254,15 @@ export default function TransactionCard({
                   </div>
 
                   <div>
+                    <i className="fa-solid fa-gas-pump"></i>
                     <span className="text-xs text-sky-600">Gas Used: </span>
                     <span className="font-medium">{gasUsed.toString()}</span>
-                    <span className="ml-3 text-xs text-sky-500">Gas Limit: {gas.toString()}</span>
+
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-sky-500">Gas Limit: {gas.toString()}</span>
+
                   </div>
 
                   <div>
@@ -240,7 +272,7 @@ export default function TransactionCard({
 
                   <div>
                     <span className="text-xs text-sky-600">Fee: </span>
-                    <span className="font-medium">{feeEth} ETH</span>
+                    <span className="font-medium">{feeEth} <i className="fa-brands fa-ethereum"></i></span>
                   </div>
 
                   <div>
@@ -252,6 +284,7 @@ export default function TransactionCard({
 
                   {isTokenTransfer && tx.contractAddress && (
                     <div>
+                      <i className="fa-solid fa-file-contract"></i>
                       <span className="text-xs text-sky-600">Token Contract: </span>
                       <a className="text-xs text-primary underline" href={`${explorerBase.replace('/tx/', '/address/')}${tx.contractAddress}`} target="_blank" rel="noreferrer">{tx.contractAddress}</a>
                     </div>
