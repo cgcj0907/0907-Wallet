@@ -38,11 +38,13 @@ export default function MainCard({ address, network }: { address: string, networ
         <div className="bg-white border border-sky-200 rounded-2xl p-5 shadow-sm mb-5">
             <div className="flex items-center justify-between">
                 <div>
-                    <div className="text-2xl font-semibold text-sky-800 mt-1">
-                        $ {(price * Number(balance)).toFixed(2)} USD
+                    <div className="text-2xl font-semibold text-sky-800 mt-1 ">
+                        <i className="fa-solid fa-dollar-sign"></i>
+                        <span>{(price * Number(balance)).toFixed(2)} USD</span>
                     </div>
 
-                    <div className="text-sm text-sky-500 mt-1">
+                    <div className="text-sm ml-1.5 text-sky-500 mt-1 flex items-center gap-2">
+                        <i className="fa-solid fa-coins"></i>
                         {Number(balance).toFixed(2)} {symbol}
                     </div>
 
@@ -53,15 +55,17 @@ export default function MainCard({ address, network }: { address: string, networ
             <div className="mt-5 grid grid-cols-2 gap-4">
                 <button
                     onClick={() => alert('发送（演示）')}
-                    className="w-full rounded-xl py-3 bg-sky-600 text-white font-medium hover:bg-sky-700 transition"
+                    className="w-full rounded-xl py-3 bg-sky-600 text-white font-medium hover:bg-sky-700 transition flex items-center justify-center gap-2"
                 >
-                    发送
+                    <i className="fa-regular fa-paper-plane fa-beat"></i>
+                    <span>发送</span>
                 </button>
                 <button
                     onClick={() => alert('接收（演示）')}
-                    className="w-full rounded-xl py-3 bg-white border border-sky-200 text-sky-700 font-medium hover:bg-sky-50 transition"
+                    className="w-full rounded-xl py-3 bg-white border border-sky-200 text-sky-700 font-medium hover:bg-sky-50 transition flex items-center justify-center gap-2"
                 >
-                    接收
+                    <i className="fa-solid fa-qrcode"></i>
+                    <span>接受</span>
                 </button>
             </div>
         </div>)

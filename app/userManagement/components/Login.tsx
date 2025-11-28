@@ -5,6 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { getUserRecord } from '../lib/savePassword';
+import { countWallet } from '@/app/walletManagement/lib/saveWallet'
 import { hashPassword } from '@/app/lib/transform';
 import { getAddress, AddressRecord } from '@/app/walletManagement/lib/saveAddress';
 
@@ -60,6 +61,13 @@ export default function Login() {
    * - 真正解密助记词/私钥在 WalletProvider 中进行（需要完整 PBKDF2 + AES-GCM）
    */
   const handleLogin = async () => {
+    const numberOfWallet = await countWallet();
+    if (numberOfWallet === 0) {
+      setMessage('当前无可用钱包，请先创建钱包');
+      router.replace('/walletManagement');
+      return;
+    }
+
     setMessage('');
     if (!password) {
       setMessage('请输入密码！');
@@ -133,7 +141,7 @@ export default function Login() {
             aria-label={showPassword ? '隐藏密码' : '显示密码'}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-blue-500 px-2 py-1 bg-transparent rounded"
           >
-            {showPassword ? '隐藏' : '显示'}
+            {showPassword ? <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
           </button>
         </div>
       </div>

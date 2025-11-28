@@ -18,7 +18,8 @@ const TABLE_WALLETS = 'Wallets';
  *
  * @returns 下一个可用 key
  */
-async function nextWalletKey() {
+
+export async function countWallet() : Promise<number> {
   return await storage.count(TABLE_WALLETS);
 }
 
@@ -31,7 +32,7 @@ async function nextWalletKey() {
  * @returns 生成的 key（数字类型）
  */
 export async function saveWallet(encryptedWallet: IEncryptedWallet): Promise<number> {
-  const key = await nextWalletKey();
+  const key = await countWallet();
   await storage.set(String(key), encryptedWallet, TABLE_WALLETS);
   return key;
 }

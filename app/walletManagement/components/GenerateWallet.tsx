@@ -197,7 +197,7 @@ export default function GenerateWallet() {
               aria-label={showPassword ? '隐藏密码' : '显示密码'}
               className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-blue-500 px-2 py-1 bg-transparent rounded"
             >
-              {showPassword ? '隐藏' : '显示'}
+              {showPassword ?  <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
             </button>
           </div>
 

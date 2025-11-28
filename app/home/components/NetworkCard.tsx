@@ -42,9 +42,10 @@ export default function NetworkCard({ network, setNetwork }: { network: string |
 
         <button
           onClick={() => setShowNetworkCard(true)}
-          className='text-xs px-3 py-1 rounded-full border transition font-medium 
+          className='flex items-center gap-1 text-xs px-3 py-1 rounded-full border transition font-medium 
                   bg-white text-sky-500 border-sky-100 hover:bg-sky-50'
         >
+          <i className="fa-solid fa-globe"></i>
           {network}
         </button>
 

@@ -95,6 +95,7 @@ export default function Register() {
 
     try {
       setLoading(true);
+      setMessage('耐心等待,请勿刷新界面');
 
       // 1. 计算密码 SHA-256 哈希并持久化存储
       const hashedPassword = await hashPassword(password);
@@ -148,7 +149,7 @@ export default function Register() {
             aria-label={showPassword ? '隐藏密码' : '显示密码'}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-blue-500 px-2 py-1 bg-transparent rounded"
           >
-            {showPassword ? '隐藏' : '显示'}
+            {showPassword ?  <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
           </button>
         </div>
       </div>
@@ -189,7 +190,7 @@ export default function Register() {
             aria-label={showConfirm ? '隐藏确认密码' : '显示确认密码'}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-blue-500 px-2 py-1 bg-transparent rounded"
           >
-            {showConfirm ? '隐藏' : '显示'}
+            {showConfirm ? <i className="fa-solid fa-eye-slash"></i> : <i className="fa-solid fa-eye"></i>}
           </button>
         </div>
       </div>
