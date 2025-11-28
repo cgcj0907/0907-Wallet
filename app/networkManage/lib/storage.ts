@@ -25,7 +25,7 @@ const DEFAULT_NETWORKS: Network[] = [
     type: 'testnet',
     chainID: 11155111,
     RPC: 'https://sepolia-rpc.publicnode.com',
-    symbol: 'ETH',
+    symbol: 'SepoliaETH',
     explorer: 'https://sepolia.etherscan.io'
   },
   {
@@ -33,7 +33,7 @@ const DEFAULT_NETWORKS: Network[] = [
     type: 'mainnet',
     chainID: 324,
     RPC: 'https://mainnet.era.zksync.io',
-    symbol: 'ETH',
+    symbol: 'ZK',
     explorer: 'https://zkscan.io'
   }
 ];
@@ -73,6 +73,6 @@ export async function hasNetwork(name: string): Promise<boolean> {
   return !!val;
 }
 
-export async function getNetwork(name: string): Promise<Network | undefined> {
+export async function getNetwork(name: string="ethereum"): Promise<Network> {
   return await get(name, NETWORK_TABLE);
 }

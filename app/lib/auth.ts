@@ -1,5 +1,5 @@
 // app/lib/auth.ts
-export const LOGIN_FLAG_KEY = 'isLogined';
+export const LOGIN_FLAG_KEY = 'isLoggedIn';
 export const LOGIN_EXPIRES_KEY = 'loginExpiresAt';
 const DEFAULT_EXPIRE_MINUTES = 10;
 
@@ -8,7 +8,7 @@ export function getLoginExpiresAt(): number | null {
   return v ? Number(v) : null;
 }
 
-export function isLoginedLocal(): boolean {
+export function isLoggedInLocal(): boolean {
   const flag = localStorage.getItem(LOGIN_FLAG_KEY);
   const expires = getLoginExpiresAt();
   if (flag !== '1' || !expires) return false;

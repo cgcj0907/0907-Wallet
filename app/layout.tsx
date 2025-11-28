@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import "./globals.css";
 import InitProvider from './components/InitProvider';
@@ -7,6 +8,9 @@ import Logo from './components/Logo'; // 新增
 export const metadata: Metadata = {
   title: "0907 Wallet",
   description: "Secure local wallet",
+    icons: {
+    icon: "/favicon.ico?v=2", // 或数组支持不同尺寸
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -18,10 +22,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <InitProvider>
           <AuthGuard>
-          
+
             <Logo />
             {children}
-            
+
           </AuthGuard>
         </InitProvider>
       </body>

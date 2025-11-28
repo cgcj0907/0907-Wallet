@@ -1,46 +1,53 @@
 'use client';
 
-import { useEffect,  useState } from 'react';
-import { AddressRecord, getAddress } from '@/app/generateWallet/lib/saveAddress';
+import { useEffect, useState } from 'react';
 import { getPrice } from '@/app/chainInteract/lib/network';
 import { getBalance } from '@/app/chainInteract/lib/account';
+import { getNetwork } from '@/app/networkManage/lib/storage';
 
-export default function MainCard() {
+export default function MainCard({ address, network }: { address: string, network: string | null }) {
     const [balance, setBalance] = useState<string>('0.0');
     const [price, setPrice] = useState<number>(0);
-    const network: string = localStorage.getItem('currentNetwork') ?? "";
+    const [symbol, setSymbol] = useState<string>('ETH');
+
 
     useEffect(() => {
         // 自调用异步函数
         (async () => {
             try {
-                const addressRecord: AddressRecord = await getAddress(0);
-                const addr = addressRecord.address;           
-                setPrice(await getPrice(network));
+                setPrice(await getPrice(network ? network : "ethereum"));
 
-                setBalance(await getBalance(addr, network));
+                setBalance(await getBalance(address, network ? network : "ethereum"));
+                const netInfo = await getNetwork(network ? network : "ethereum");
+                if (netInfo && netInfo.symbol) {
+                    setSymbol(netInfo.symbol);
+                } else {
+                    // fallback to ETH if network info not found
+                    setSymbol('unkown');
+                }
 
             } catch (err) {
                 console.error("请求出错:", err);
             }
         })();
 
-    }, []); // 空依赖数组表示只在挂载时执行一次
+    }, [network, address]); // 依赖 network 或 address 改变时重新获取
 
     return (
 
         <div className="bg-white border border-sky-200 rounded-2xl p-5 shadow-sm mb-5">
             <div className="flex items-center justify-between">
                 <div>
-                    <div className="text-xs text-sky-500">总余额</div>
-                    <div className="text-2xl font-semibold text-sky-800 mt-1">{balance} ETH</div>
-                    <div className="text-sm text-sky-500 mt-1">现价: {price} USD</div>
+                    <div className="text-2xl font-semibold text-sky-800 mt-1">
+                        $ {(price * Number(balance)).toFixed(2)} USD
+                    </div>
+
+                    <div className="text-sm text-sky-500 mt-1">
+                        {Number(balance).toFixed(2)} {symbol}
+                    </div>
+
                 </div>
 
-                <div className="text-right">
-                    <div className="text-xs text-sky-500">网络</div>
-                    <div className="text-sm font-medium text-sky-800 mt-1">{network}</div>
-                </div>
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-4">

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import { getUserRecord } from '../lib/storagePassword';
 import { hashPassword } from '@/app/lib/hash';
+import { getAddress, AddressRecord } from '@/app/generateWallet/lib/saveAddress';
 
 
 
@@ -43,7 +44,7 @@ export default function Login() {
       const rec = await getUserRecord();
       if (!rec) {
         setMessage('未检测到已注册的密码，请先注册。');
-        localStorage.setItem('isLogined', '0');
+        localStorage.setItem('isLoggedIn', '0');
         localStorage.removeItem('loginExpiresAt');
         setLoading(false);
         return;
@@ -54,19 +55,24 @@ export default function Login() {
         setMessage('登录成功！');
 
         // 保存登录状态 + 10分钟过期时间
-        localStorage.setItem('isLogined', '1');
+        localStorage.setItem('isLoggedIn', '1');
         localStorage.setItem('loginExpiresAt', (Date.now() + 10 * 60 * 1000).toString());
+        if (!localStorage.getItem('currentAddress')) {
+          const addressRecord: AddressRecord = await getAddress(0);
+          localStorage.setItem('currentAddress', addressRecord.address);
+        }
+
         setPassword('');
         router.replace('/home');
       } else {
         setMessage('密码错误，请重试。');
-        localStorage.setItem('isLogined', '0');
+        localStorage.setItem('isLoggedIn', '0');
         localStorage.removeItem('loginExpiresAt');
       }
     } catch (err) {
       console.error(err);
       setMessage('验证失败，请重试。');
-      localStorage.setItem('isLogined', '0');
+      localStorage.setItem('isLoggedIn', '0');
       localStorage.removeItem('loginExpiresAt');
     } finally {
       setLoading(false);

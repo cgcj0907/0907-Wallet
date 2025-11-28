@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { getBalance } from '@/app/chainInteract/lib/account';
 import { getPrice } from '@/app/chainInteract/lib/network';
 
-export default function TokenCard() {
+export default function TokenCard({ address }: { address: string }) {
   const [networks, setNetworks] = useState<Network[]>([]);
-  const [address, setAddress] = useState('');
+
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [prices, setPrices] = useState<Record<string, number>>({});
 
@@ -15,7 +15,7 @@ export default function TokenCard() {
   useEffect(() => {
     (async () => {
       setNetworks(await getAllNetworks());
-      setAddress(localStorage.getItem('currentAddress') || '');
+
     })();
   }, []);
 
@@ -41,32 +41,34 @@ export default function TokenCard() {
     `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${network}/info/logo.png`;
 
   return (
-    <div className="bg-white border border-sky-200 rounded-2xl p-4 shadow-sm">
-      <div className="text-sm text-sky-700 font-medium mb-3">代币（常用）</div>
+     <div className="p-4 space-y-4">
+      <h2 className="text-2xl font-semibold mb-2">Tokens</h2>
 
       <div className="space-y-3">
         {networks.map((t) => (
           <div
             key={t.name}
-            className="flex items-center justify-between p-3 rounded-lg hover:bg-sky-50"
+            className="flex items-center justify-between py-3 rounded-xl bg-sky-50/40 hover:bg-sky-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <img
                 src={getLogoUrl(t.name)}
-                className="w-6 h-6 object-contain"
+                className="w-7 h-7 rounded-full object-contain shadow-sm"
                 onError={(e) => (e.currentTarget.style.display = 'none')}
               />
 
-              <div>
-                <div className="text-sm font-medium text-sky-800">{t.name}</div>
-                <div className="text-xs text-sky-500">
+              <div className="leading-tight">
+                <div className="text-sm font-semibold text-sky-900">
+                  {t.symbol}
+                </div>
+                <div className="text-xs text-sky-500 mt-0.5">
                   {prices[t.name] ? `$${prices[t.name]}` : '加载中...'}
                 </div>
               </div>
             </div>
 
             <div className="text-right">
-              <div className="text-sm font-medium text-sky-800">
+              <div className="text-sm font-medium text-sky-900">
                 {balances[t.name] ?? '读取中...'}
               </div>
             </div>
@@ -74,14 +76,14 @@ export default function TokenCard() {
         ))}
       </div>
 
-      <div className="mt-4">
-        <button
-          onClick={() => alert('导入代币（演示）')}
-          className="w-full py-2 rounded-lg border border-sky-200 text-sm"
-        >
-          导入代币
-        </button>
-      </div>
+      <button
+        onClick={() => alert('导入代币（演示）')}
+        className="w-full py-2.5 mt-5 rounded-xl border border-sky-200
+                 text-sm text-sky-700 hover:bg-sky-50 transition-colors"
+      >
+        导入代币
+      </button>
     </div>
   );
+
 }

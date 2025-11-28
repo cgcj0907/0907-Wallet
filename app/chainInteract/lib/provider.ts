@@ -17,7 +17,6 @@ export function getFreeProvider(network: string = "ethereum") {
     if (!freeRPC[network]) {
         throw new Error(`不支持的免费网络：${network}`);
     }
-    console.log("RPC URL:", freeRPC[network]);
 
 
     return new ethers.JsonRpcProvider(freeRPC[network]);

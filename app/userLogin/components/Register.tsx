@@ -67,7 +67,7 @@ export default function Register() {
       setMessage('密码已加密保存成功！');
       setPassword('');
       setConfirmPassword('');
-      localStorage.setItem('isLogined', '0');
+      localStorage.setItem('isLoggedIn', '0');
       await initDefaultNetworks();
       router.push('/generateWallet');
     } catch (err) {

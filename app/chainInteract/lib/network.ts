@@ -14,6 +14,7 @@ export const PRICE_FEEDS: Record<string, string> = {
 
 
 export async function getPrice(network: string = "ethereum" ) {
+    network = network.toLowerCase();
     const provider = getFreeProvider(network);
 
     const address = PRICE_FEEDS[network];

@@ -21,7 +21,6 @@ export async function initDB(): Promise<IDBPDatabase> {
     });
   }
 
-  console.log('当前数据库版本号:', db.version);
   return db;
 }
 // ======================
