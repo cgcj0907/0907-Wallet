@@ -6,7 +6,6 @@
  * @date 2025-11-28
  */
 
-import { Wallet } from "ethers";
 import * as bip39 from "bip39";
 import { HDNodeWallet } from "ethers";
 
@@ -34,7 +33,7 @@ export interface WalletResult {
  */
 export function generateWallet(): WalletResult {
   // 生成随机钱包（自动附带英文助记词）
-  const random: HDNodeWallet = Wallet.createRandom();
+  const random: HDNodeWallet = HDNodeWallet.createRandom();
 
   // 英文助记词（从随机钱包中解析）
   const entropy_en: string = random.mnemonic!.entropy.slice(2); // 去掉 "0x"

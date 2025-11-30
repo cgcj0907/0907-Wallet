@@ -22,19 +22,13 @@ export interface AddressRecord {
     KeyPath: string;
   };
   address: string;
+  name: string;
 }
 
-/**
- * 获取 Addresses 表中下一条记录应使用的 key（自增逻辑）
- *
- * WHY：storage.count() 统计当前条目数量，用作“自增主键”
- *      例如已有 0,1,2 → 下一个 key = 3
- *
- * @returns number - 下一个 key
- */
-async function nextAddressKey() {
-  return await storage.count(TABLE_ADDRESSES);
+export async function countAddress() {
+  return storage.count(TABLE_ADDRESSES);
 }
+
 
 /**
  * 保存地址记录（自动分配 key）
@@ -42,11 +36,20 @@ async function nextAddressKey() {
  * WHY：使用 count 作为 key，可避免重复 key 并确保顺序一致
  *
  * @param addressRecord - 要保存的钱包记录
- * @returns number - 新生成的 key
+ * @param key - 要修改的键
+ * @returns string - 新生成的 key
  */
-export async function saveAddress(addressRecord: AddressRecord): Promise<number> {
-  const key = await nextAddressKey();
-  await storage.set(String(key), addressRecord, TABLE_ADDRESSES);
+export async function saveAddress(addressRecord: AddressRecord, key?: string): Promise<string | undefined> {
+  if (!key) {
+    const number = await countAddress();
+    if (!number) {
+      key = '0';
+    }
+  }
+  if (key) {
+    await storage.set(key, addressRecord, TABLE_ADDRESSES);
+  }
+  
   return key;
 }
 
@@ -56,7 +59,7 @@ export async function saveAddress(addressRecord: AddressRecord): Promise<number>
  * @param key - 主键
  * @returns AddressRecord | undefined - 对应记录或 undefined
  */
-export async function getAddress(key: number): Promise<AddressRecord | undefined> {
+export async function getAddress(key: string): Promise<AddressRecord | undefined> {
   return await storage.get(String(key), TABLE_ADDRESSES);
 }
 
@@ -65,8 +68,32 @@ export async function getAddress(key: number): Promise<AddressRecord | undefined
  *
  * @param key - 主键
  */
-export async function deleteAddress(key: number): Promise<void> {
-  await storage.del(String(key), TABLE_ADDRESSES);
+export async function deleteAddress(key: string): Promise<void> {
+  await storage.del(key, TABLE_ADDRESSES);
+}
+
+/**
+ * 修改指定 key 的地址记录的名称
+ *
+ * @param key - 要修改的地址记录的唯一标识
+ * @param name - 新的名称
+ * @returns Promise<void> - 异步操作，无返回值
+ *
+ * 逻辑：
+ * 1. 根据 key 获取已有的地址记录。
+ * 2. 如果记录存在，更新其 name 字段。
+ * 3. 调用 saveAddress 保存更新后的地址记录。
+ */
+export async function modifyAddressName(key: string, name: string): Promise<void> {
+  // 获取指定 key 的地址记录
+  let addressRecord: AddressRecord | undefined = await getAddress(key);
+
+  if (addressRecord) {
+    // 修改名称
+    addressRecord.name = name;
+    // 保存更新后的地址记录
+    await saveAddress(addressRecord, key);
+  }
 }
 
 /**
@@ -77,14 +104,14 @@ export async function deleteAddress(key: number): Promise<void> {
  *  - values() 返回所有对应值，例如 [record0, record1, ...]
  *  - 使用 map 将 key 和记录组合为一个对象数组
  *
- * @returns {Array<{ key: number; wallet: AddressRecord }>}
+ * @returns {Array<{ key: IDBValidKey; addressRecord: AddressRecord }>}
  */
-export async function listWallets() {
+export async function listAddresses(): Promise<Array<{ key: IDBValidKey; addressRecord: AddressRecord }>> {
   const keys = await storage.keys(TABLE_ADDRESSES);      // [0,1,2,3,...]
-  const values = await storage.values(TABLE_ADDRESSES);  // [{...},{...},...]
+  const values = await storage.values<AddressRecord>(TABLE_ADDRESSES);  // [{...},{...},...]
 
   return keys.map((key, i) => ({
     key,
-    wallet: values[i]
+    addressRecord: values[i]
   }));
 }

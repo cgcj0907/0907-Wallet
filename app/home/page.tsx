@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAddress } from '@/app/walletManagement/lib/saveAddress';
+import { AddressRecord, getAddress } from '@/app/walletManagement/lib/saveAddress';
 
 import MainCard from './components/MainCard';
 import NetworkCard from './components/NetworkCard';
@@ -11,8 +11,7 @@ import TransactionCard from './components/TransactionCard';
 
 
 export default function WalletHome() {
-  const [address, setAddress] = useState<string>(localStorage.getItem('currentAddress') || '');
-
+  const [addressRecord, setAddressRecord] = useState<AddressRecord>()
   const [tab, setTab] = useState<'assets' | 'activity'>('assets');
   const [network, setNetwork] = useState<string | null>('Ethereum');
 
@@ -21,17 +20,23 @@ export default function WalletHome() {
   useEffect(() => {
     (async () => {
       try {
+
         // 如果 localStorage 没有 currentNetwork，则设置默认为 ethereum
         if (!localStorage.getItem('currentNetwork')) {
           localStorage.setItem('currentNetwork', 'ethereum');
         }
         setNetwork(localStorage.getItem('currentNetwork'));
-
-        if (!localStorage.getItem('currentAddress')) {
-          const addressRecord = await getAddress(0);
-          if (addressRecord?.address) {
-            setAddress(addressRecord.address);
-            localStorage.setItem('currentAddress', addressRecord.address);
+        const addressKeyPath = localStorage.getItem('currentAddressKeyPath');
+        if (!addressKeyPath) {
+          const addressRecord = await getAddress('0');
+          if (addressRecord) {
+            setAddressRecord(addressRecord);
+            localStorage.setItem('currentAddressKeyPath', '0');
+          }
+        } else if (addressKeyPath) {
+          const addressRecord = await getAddress(addressKeyPath);
+          if (addressRecord) {
+            setAddressRecord(addressRecord);
           }
         }
 
@@ -51,7 +56,7 @@ export default function WalletHome() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex gap-2 items-center">
-            <i className="fa-solid fa-wallet" style={{color: "#74C0FC"}}></i>
+            <i className="fa-solid fa-wallet" style={{ color: "#74C0FC" }}></i>
             <div className="text-lg font-semibold text-sky-800">0907 Wallet</div>
           </div>
           <div className="text-xs text-sky-500 mt-1">Supported by SST</div>
@@ -62,11 +67,11 @@ export default function WalletHome() {
           <NetworkCard network={network} setNetwork={setNetwork} />
 
 
-          <AccountCard address={address} />
+          {addressRecord && <AccountCard addressRecord={addressRecord} setAddressRecord={setAddressRecord} />}
 
         </div>
       </div>
-      <MainCard address={address} network={network} />
+      <MainCard address={addressRecord?.address} network={network} />
 
       {/* 标签栏：简洁 */}
       <div className="flex gap-3 mb-4">
@@ -89,11 +94,11 @@ export default function WalletHome() {
       {/* 内容区*/}
       <div>
         {tab === 'assets' && (
-          <TokenCard address={address} />
+          <TokenCard address={addressRecord?.address} />
         )}
 
         {tab === 'activity' && (
-          <TransactionCard network={network} />
+          <TransactionCard address={addressRecord?.address} network={network} />
         )}
       </div>
 

@@ -5,7 +5,7 @@ import { getPrice } from '@/app/chainInteraction/lib/network';
 import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 
-export default function MainCard({ address, network }: { address: string, network: string | null }) {
+export default function MainCard({ address, network }: { address: string | undefined, network: string | null }) {
     const [balance, setBalance] = useState<string>('0.0');
     const [price, setPrice] = useState<number>(0);
     const [symbol, setSymbol] = useState<string>('ETH');
@@ -15,9 +15,12 @@ export default function MainCard({ address, network }: { address: string, networ
         // 自调用异步函数
         (async () => {
             try {
-                setPrice(await getPrice(network ? network : "ethereum"));
 
-                setBalance(await getBalance(address, network ? network : "ethereum"));
+                setPrice(await getPrice(network ? network : "ethereum"));
+                if (address) {
+                    setBalance(await getBalance(address, network ? network : "ethereum"));
+                }
+
                 const netInfo = await getNetwork(network ? network : "ethereum");
                 if (netInfo && netInfo.symbol) {
                     setSymbol(netInfo.symbol);
@@ -45,7 +48,7 @@ export default function MainCard({ address, network }: { address: string, networ
 
                     <div className="text-sm ml-1.5 text-sky-500 mt-1 flex items-center gap-2">
                         <i className="fa-solid fa-coins"></i>
-                        {Number(balance).toFixed(2)} {symbol}
+                        {Number(balance).toFixed(18)} {symbol}
                     </div>
 
                 </div>

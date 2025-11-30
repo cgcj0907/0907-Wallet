@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getPrice } from '@/app/chainInteraction/lib/network';
 
-export default function TokenCard({ address }: { address: string }) {
+export default function TokenCard({ address }: { address: string | undefined }) {
   const [networks, setNetworks] = useState<Network[]>([]);
 
   const [balances, setBalances] = useState<Record<string, string>>({});

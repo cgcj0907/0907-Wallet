@@ -1,14 +1,17 @@
 //app/walletManagement/components/GenerateWallet.tsx
+// app/walletManagement/components/GenerateWallet.tsx
 'use client'
 
 /**
- * 钱包生成界面（随机 HD 钱包 + 加密 + 保存）
- * - 验证用户密码
- * - 生成随机钱包（助记词 + 钱包对象）
- * - 对钱包进行密码加密
- * - 将加密钱包通过 saveWallet() 持久化（IndexedDB）
- * - 同步将地址通过 saveAddress() 存储到 Address 表
- * - 展示助记词（英文 + 中文）
+ * HD 钱包生成组件
+ *
+ * 职责：
+ * 1. 验证用户输入的本地密码（与 IndexedDB 中的 passwordHash 对比）
+ * 2. 调用 generateWallet() 生成随机钱包（英文/中文助记词 + HD 钱包对象）
+ * 3. 使用 encryptWallet() 通过用户密码加密 HDNodeWallet
+ * 4. 调用 saveWallet() 将加密钱包保存到 IndexedDB 的 Wallets 表
+ * 5. 调用 saveAddress() 保存 1 个默认地址到 Addresses 表
+ * 6. 显示助记词和操作状态
  */
 
 import { useState } from 'react';
@@ -16,117 +19,130 @@ import { useRouter } from 'next/navigation';
 
 import { generateWallet, WalletResult } from '../lib/generateWallet';
 import { encryptWallet } from '../lib/cryptoWallet';
-import { saveWallet } from '../lib/saveWallet';
+import { saveWallet, countWallet } from '../lib/saveWallet';
 
 import { getUserRecord } from '@/app/userManagement/lib/savePassword';
 import { hashPassword } from '@/app/lib/transform';
 
-import { saveAddress } from '../lib/saveAddress';
-import { AddressRecord } from '../lib/saveAddress';
+import { AddressRecord, saveAddress, countAddress } from '../lib/saveAddress';
+
+
+import { isLoggedInLocal } from '@/app/lib/auth';
+
 
 /**
  * @file HD 钱包生成组件
- * @description 
- *  - 输入本地密码 → 验证 → 生成随机 HD 钱包
- *  - 同时生成英文 & 中文助记词（中文使用 bip39 中文词库）
- *  - 使用用户密码加密 HDNodeWallet → 持久化到 IndexedDB（Wallets 表）
- *  - 自动生成地址记录 → 持久化到 IndexedDB（Addresses 表）
- *  - 组件负责 UI 展示、助记词展开动画、输入校验、错误提示等行为
+ * @description
+ * - 输入本地密码 → 验证 → 生成随机 HD 钱包
+ * - 同时生成英文 & 中文助记词（中文使用 bip39 中文词库）
+ * - 使用用户密码加密 HDNodeWallet → 持久化到 IndexedDB（Wallets 表）
+ * - 自动生成地址记录 → 持久化到 IndexedDB（Addresses 表）
+ * - 组件负责 UI 展示、助记词展开动画、输入校验、错误提示等行为
  *
- * @author 
- *   Guangyang Zhong | github: https://github.com/cgcj0907
+ * @author
+ * Guangyang Zhong | github: https://github.com/cgcj0907
  *
- * @date 
- *   2025-11-28
+ * @date
+ * 2025-11-28
  */
 
 export default function GenerateWallet() {
 
-  /** 钱包生成的数据（助记词 + HD 钱包实例） */
+  /** 保存 generateWallet() 的结果（助记词 + HDNodeWallet 实例） */
   const [walletData, setWalletData] = useState<WalletResult | null>(null);
 
-  /** 用户输入的加密密码（用于加密钱包） */
+  /** 用户输入的密码，用于 AES 加密钱包 */
   const [password, setPassword] = useState('');
 
-  /** 状态提示（成功、失败、错误等） */
+  /** UI 显示的状态提示（错误/成功文本） */
   const [status, setStatus] = useState<string | null>(null);
 
-  /** 是否显示密码明文 */
+  /** 控制密码明文显示/隐藏 */
   const [showPassword, setShowPassword] = useState(false);
 
   /** 是否展开助记词区域 */
   const [showMnemonic, setShowMnemonic] = useState(false);
 
-  /** 钱包是否成功保存 */
+  /** 是否成功保存钱包（用于切换 UI） */
   const [ifWalletSaved, setifWalletSaved] = useState(false);
 
-  /** 加载中状态（防多次点击） */
+  /** 生成钱包按钮 loading 状态，避免重复点击 */
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
   /**
-   * 点击“生成钱包”按钮逻辑
-   * 1. 校验密码是否正确（与本地记录的 passwordHash 对比）
-   * 2. 生成随机 HD 钱包（助记词 + wallet 对象）
-   * 3. encryptWallet() 使用密码对钱包进行 AES 加密
-   * 4. saveWallet() 保存到 IndexedDB（Wallets 表）
-   * 5. saveAddress() 保存地址到 Addresses 表
-   * 6. 展示助记词并显示成功状态
+   * 处理“生成钱包”按钮逻辑：
+   * 1. 校验密码
+   * 2. 生成钱包（助记词 + HD 钱包对象）
+   * 3. 使用密码加密钱包
+   * 4. 保存钱包到 Wallets 表
+   * 5. 保存地址到 Addresses 表
+   * 6. 展示助记词
    */
   const handleGenerate = async () => {
 
-    // === 1. 密码判空 ===
+    // 1. 密码不能为空
     if (!password) {
       setStatus('请先输入密码');
       return;
     }
 
-    // === 2. 获取用户密码记录（若无用户记录 → 跳转到 userManagement 进行创建）===
+    // 2. 读取用户本地密码记录（若无 → 用户还未设置密码 → 跳转 userManagement 设置）
     const userRecord = await getUserRecord();
     if (!userRecord) {
       router.replace('/userManagement');
       return;
     }
 
-    // === 3. 校验密码是否正确 ===
+    // 3. 校验密码是否正确：对输入密码 hash → 与 IndexedDB 中的 passwordHash 比较
     const hashedInputPwd = await hashPassword(password);
     if (hashedInputPwd !== userRecord?.passwordHash) {
       setStatus('密码错误,无法生成钱包');
       return;
     }
 
-    setLoading(true);
+    setLoading(true); // 避免重复点击
 
     try {
-      // === 4. 生成钱包（同步） ===
+      // 4. 生成随机 HD 钱包（含助记词）
       const walletResult = generateWallet();
       setWalletData(walletResult);
 
-      // === 5. 使用密码对钱包加密 ===
-      const encryptedWallet = await encryptWallet(walletResult.wallet, password);
+      // 并行计算加密钱包 & 当前钱包数量
+      const [encryptedWallet, numberOfWallet, numberOfAddress] = await Promise.all([
+        encryptWallet(walletResult.wallet, password),
+        countWallet(),
+        countAddress()
+      ]);
 
-      // === 6. 保存钱包到 Wallets 表（返回 key） ===
-      const savedWalletKey = await saveWallet(encryptedWallet);
-      if (typeof savedWalletKey !== 'number' || savedWalletKey < 0) {
-        throw new Error('保存钱包失败（invalid key）');
+      // 5. 生成 keyPath：第一个钱包使用 keyPath=0，其他使用 UUID
+      let keyPath: string;
+      if (numberOfWallet === 0) {
+        keyPath = '0';
+      } else {
+        keyPath = crypto.randomUUID();
       }
-
-      // === 7. 构建 AddressRecord 并保存 ===
+      // 6. 构建地址记录（地址属于 HDNodeWallet）
       const addressRecord: AddressRecord = {
         wallet: {
-          type: 'HDNodeWallet',   // 你的钱包类型结构
-          KeyPath: String(savedWalletKey)
+          type: 'HDNodeWallet',
+          KeyPath: keyPath         
         },
-        address: walletResult.wallet.address
+        address: walletResult.wallet.address,
+        name: 'Account' + numberOfAddress.toString()
       };
 
-      const savedAddressKey = await saveAddress(addressRecord);
-      if (typeof savedAddressKey !== 'number' || savedAddressKey < 0) {
+      // 并行保存钱包和地址记录（无相互依赖，极大缩短用户等待时间）
+      const [_, savedAddressKey] = await Promise.all([
+        saveWallet(keyPath, encryptedWallet),    // 我们不关心返回值，所以用 _ 占位
+        saveAddress(addressRecord, keyPath)               // 需要这个 key，正常接收
+      ]);
+      if (typeof savedAddressKey !== 'string') {
         throw new Error('保存地址失败（invalid key）');
       }
 
-      // === 8. 全部成功 ===
+      // 全部成功 → 更新状态
       setifWalletSaved(true);
       setStatus('钱包生成并加密成功，已保存到本地');
       setPassword('');
@@ -140,8 +156,7 @@ export default function GenerateWallet() {
   };
 
   /**
-   * 渲染助记词网格
-   * @param mnemonic 12/24 个助记词词组
+   * 渲染助记词网格 UI（12 / 24 个词）
    */
   const renderMnemonicGrid = (mnemonic: string) => {
     const words = mnemonic.split(' ');
@@ -159,6 +174,7 @@ export default function GenerateWallet() {
               animate-fadeIn
             "
           >
+            {/* 助记词顺序编号 */}
             <span className="font-semibold text-blue-400 mr-1">{index + 1}.</span>
             {word}
           </div>
@@ -167,20 +183,16 @@ export default function GenerateWallet() {
     );
   };
 
-
   // ===========================
-  // ======== 组件 UI ==========
+  // ======= 组件 UI ===========
   // ===========================
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md max-w-md m-auto">
-      <h2 className="text-2xl font-semibold text-blue-700 mb-6 text-center">
-        生成随机钱包
-      </h2>
+    <div>
 
-      {/* ================= 密码输入区 & 生成按钮 ================= */}
+      {/* === 密码输入 + 按钮区域 === */}
       {!ifWalletSaved ? (
         <>
-          {/* 密码输入框 */}
+          {/* 用户输入用于加密的本地密码 */}
           <div className="mb-4 relative">
             <input
               type={showPassword ? 'text' : 'password'}
@@ -197,11 +209,11 @@ export default function GenerateWallet() {
               aria-label={showPassword ? '隐藏密码' : '显示密码'}
               className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-blue-500 px-2 py-1 bg-transparent rounded"
             >
-              {showPassword ?  <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
+              {showPassword ? <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
             </button>
           </div>
 
-          {/* 生成按钮 */}
+          {/* 主操作按钮：生成钱包 */}
           <button
             onClick={handleGenerate}
             disabled={loading}
@@ -212,32 +224,36 @@ export default function GenerateWallet() {
             {loading ? '生成中...' : '生成钱包'}
           </button>
 
-          {/* 状态提示 */}
+          {/* 错误 / 状态提示 */}
           {status && <p className="mt-4 text-sm text-gray-600">{status}</p>}
         </>
       ) : (
-        // ====== 钱包保存成功 ======
+        // 钱包保存成功的 UI
         <div className="mb-4">
           <p className="mb-4 text-center text-green-700">{status || '钱包已生成'}</p>
           <button
-            onClick={() => router.push('/userManagement')}
+            onClick={() => {
+              const path = isLoggedInLocal() ? '/home' : '/userManagement';
+              router.push(path);
+            }}
             className="w-full py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors"
           >
-            前往登录
+            {isLoggedInLocal() ? '回到主页' : '前往登录'}
           </button>
         </div>
+
       )}
 
-
-      {/* ================= 助记词展示 ================= */}
+      {/* === 助记词展示区域 === */}
       {walletData && (
         <div className="mt-8 w-full bg-white shadow-md rounded-lg p-6 space-y-4">
 
+          {/* 安全提示 */}
           <div className="p-2 bg-yellow-100 border-l-4 border-yellow-400 text-yellow-800 rounded">
             ⚠️ 请务必用纸将助记词写下，并妥善保管，切勿泄露给他人！
           </div>
 
-          {/* 展开/收起助记词 */}
+          {/* 展开/收起按钮 */}
           <button
             type="button"
             onClick={() => setShowMnemonic(prev => !prev)}
@@ -246,6 +262,7 @@ export default function GenerateWallet() {
             {showMnemonic ? '收起助记词' : '点击查看助记词'}
           </button>
 
+          {/* 助记词内容 */}
           {showMnemonic && (
             <div className="space-y-4 transition-all duration-500">
 

@@ -1,6 +1,6 @@
 /**
  * @file 加密钱包存储工具（IndexedDB 封装）
- * @description 负责在 IndexedDB 的 `Wallets` 表中保存、读取、删除和列出加密后的 HD 钱包数据。
+ * @description 负责在 IndexedDB 的 `Wallets` 表中保存、读取、删除和列出加密后的 HD 钱包数据
  * @author Guangyang Zhong | github: https://github.com/cgcj0907
  * @date 2025-11-28
  */
@@ -11,64 +11,69 @@ import * as storage from '@/app/lib/storage';
 const TABLE_WALLETS = 'Wallets';
 
 /**
- * 获取 Wallets 表的下一个 key（自增序号）
+ * 
+ * 说明：
+ * - 每次 countWallet() 返回当前记录数，
  *
- * WHY：使用 storage.count() 获取当前表中已有记录数量，
- *      并将其当做下一条记录的 key，实现“自增主键”效果。
- *
- * @returns 下一个可用 key
+ * @returns Promise<number>
  */
-
-export async function countWallet() : Promise<number> {
+export async function countWallet(): Promise<number> {
   return await storage.count(TABLE_WALLETS);
 }
 
 /**
- * 保存加密钱包记录（自动分配 key）
+ * 保存加密钱包记录（使用外部传入的 key）
  *
- * WHY：以 count() 作为 key，确保 key 递增、不会覆盖旧数据。
+ * 注意：
+ * - 不在内部生成 key，保证流程更灵活（如第一条可用 key=0）
+ * - storage.set() 始终会覆盖同 key，所以 key 必须保证唯一
  *
- * @param encryptedWallet - 加密后的钱包结构（IEncryptedWallet）
- * @returns 生成的 key（数字类型）
+ * @param key string - 存储键（调用方负责自增逻辑）
+ * @param encryptedWallet IEncryptedWallet - 加密后的钱包对象
  */
-export async function saveWallet(encryptedWallet: IEncryptedWallet): Promise<number> {
-  const key = await countWallet();
+export async function saveWallet(key: string, encryptedWallet: IEncryptedWallet): Promise<void> {
   await storage.set(String(key), encryptedWallet, TABLE_WALLETS);
-  return key;
 }
 
 /**
- * 根据 key 获取钱包记录
+ * 读取指定 key 的钱包记录。
  *
- * @param key - Wallets 表中的主键
- * @returns IEncryptedWallet | null | undefined - 对应钱包记录
+ * @param key number - Wallets 表的主键
+ * @returns Promise<IEncryptedWallet | null | undefined>
+ *          - undefined 代表 key 不存在
+ *          - null 代表值为空（通常不会出现，除非人为写入）
  */
-export async function getWallet(key: number): Promise<IEncryptedWallet | null | undefined> {
-  return await storage.get(String(key), TABLE_WALLETS);
+export async function getWallet(key: string): Promise<IEncryptedWallet | null | undefined> {
+  return await storage.get(key, TABLE_WALLETS);
 }
 
 /**
- * 删除指定 key 的钱包
+ * 删除指定 key 的钱包记录。
  *
- * @param key - 主键
+ * @param key number - Wallets 表的主键
+ * @returns Promise<void>
  */
-export async function deleteWallet(key: number): Promise<void> {
-  await storage.del(String(key), TABLE_WALLETS);
+export async function deleteWallet(key: string): Promise<void> {
+  await storage.del(key, TABLE_WALLETS);
 }
 
 /**
- * 列出所有钱包记录（包含 key）
+ * 列出 Wallets 表内所有钱包记录（含 key）。
  *
- * WHY：
- *  - keys() 获取所有 key，例如 [0,1,2,3]
- *  - values() 获取对应钱包值
- *  - 使用 map 将 key 与 wallet 组合为统一对象格式
+ * 逻辑说明：
+ * - storage.keys()   → 返回所有主键数组，例如 ["0", "1", "2"]
+ * - storage.values() → 返回所有钱包值，顺序与 keys 对应
+ * - map 组合为统一格式：{ key: number, wallet: IEncryptedWallet }
  *
- * @returns Array<{ key: number; wallet: IEncryptedWallet }>
+ * 返回格式示例：
+ * [
+ *   { key: 0, wallet: { ... } },
+ *   { key: 1, wallet: { ... } }
+ * ]
  */
 export async function listWallets() {
-  const keys = await storage.keys(TABLE_WALLETS);      // [0,1,2,3]
-  const values = await storage.values(TABLE_WALLETS);  // [wallet0, wallet1, wallet2]
+  const keys = await storage.keys(TABLE_WALLETS);      // e.g. ["0", "1", "2"]
+  const values = await storage.values(TABLE_WALLETS);  // e.g. [wallet0, wallet1, wallet2]
 
   return keys.map((key, i) => ({
     key,

@@ -97,12 +97,15 @@ export default function Register() {
       setLoading(true);
       setMessage('耐心等待,请勿刷新界面');
 
-      // 1. 计算密码 SHA-256 哈希并持久化存储
+      // 1. 计算密码的 SHA-256 哈希值
       const hashedPassword = await hashPassword(password);
-      await savePasswordHash(hashedPassword);
 
-      // 2. 初始化默认支持的网络（Mainnet + Sepolia）
-      await initDefaultNetworks();
+      // 2. 并行执行：持久化密码哈希 + 初始化默认支持的网络（Mainnet + Sepolia）
+      await Promise.all([
+        savePasswordHash(hashedPassword),
+        initDefaultNetworks()
+      ]);
+
 
       // 3. 清理状态并跳转至钱包创建页面
       setMessage('密码设置成功！正在进入钱包创建流程...');
@@ -149,7 +152,7 @@ export default function Register() {
             aria-label={showPassword ? '隐藏密码' : '显示密码'}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-blue-500 px-2 py-1 bg-transparent rounded"
           >
-            {showPassword ?  <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
+            {showPassword ? <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
           </button>
         </div>
       </div>
@@ -190,7 +193,7 @@ export default function Register() {
             aria-label={showConfirm ? '隐藏确认密码' : '显示确认密码'}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-blue-500 px-2 py-1 bg-transparent rounded"
           >
-            {showConfirm ? <i className="fa-solid fa-eye-slash"></i> : <i className="fa-solid fa-eye"></i>}
+            {showConfirm ? <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
           </button>
         </div>
       </div>
@@ -200,9 +203,8 @@ export default function Register() {
         onClick={handleRegister}
         disabled={loading}
         aria-busy={loading}
-        className={`w-full py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition-colors flex items-center justify-center ${
-          loading ? 'opacity-60 cursor-wait' : ''
-        }`}
+        className={`w-full py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition-colors flex items-center justify-center ${loading ? 'opacity-60 cursor-wait' : ''
+          }`}
       >
         {loading && <span className="spinner mr-2" />}
         {loading ? '设置中...' : '完成设置'}

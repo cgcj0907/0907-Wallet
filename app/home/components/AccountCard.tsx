@@ -1,9 +1,16 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import  AccountPanel  from './smallComponents/AccountPanel'
+import { AddressRecord } from '@/app/walletManagement/lib/saveAddress';
+import AccountPanel from './smallComponents/AccountPanel'
 import Avatar from 'boring-avatars';
 
-export default function AccountCard({ address }: { address: string | undefined }) {
+export default function AccountCard(
+    { addressRecord, setAddressRecord
+
+    }: {
+        addressRecord: AddressRecord,
+        setAddressRecord: (addressRecord: AddressRecord) => void
+    }) {
     // 弹窗状态
     const [accountPanelOpen, setAccountPanelOpen] = useState(false);
     // ✔ 小卡片复制后绿色状态
@@ -15,12 +22,12 @@ export default function AccountCard({ address }: { address: string | undefined }
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     // 处理顶部小卡片的地址复制
     const copyAddress = async () => {
-        if (!address) return;
-        await navigator.clipboard.writeText(address);
+        if (!addressRecord) return;
+        await navigator.clipboard.writeText(addressRecord.address);
         setCopiedGreen(true);
         setTimeout(() => setCopiedGreen(false), 1500);
     };
-   
+
     const short = (addr?: string) => {
         if (!addr) return '';
         if (addr.length <= 12) return addr;
@@ -91,7 +98,7 @@ export default function AccountCard({ address }: { address: string | undefined }
                     >
                         <div className="relative w-9 h-9 shrink-0">
                             <Avatar
-                                name={address}
+                                name={addressRecord.address}
                                 size={36}
                                 variant="beam"
                                 colors={["#FFFFFF", "#E3F2FD", "#90CAF9", "#42A5F5", "#1E88E5"]}
@@ -99,7 +106,7 @@ export default function AccountCard({ address }: { address: string | undefined }
 
                         </div>
                         <div className="text-right">
-                            <div className="text-sm font-medium text-sky-800">0907</div>
+                            <div className="text-sm font-medium text-sky-800">{addressRecord.name}</div>
                         </div>
                     </button>
 
@@ -132,7 +139,7 @@ export default function AccountCard({ address }: { address: string | undefined }
                                     className="font-mono text-xs leading-none transition-colors duration-300 font-medium"
                                     style={{ color: copiedGreen ? "#16a34a" : "#0c4a6e" }}
                                 >
-                                    {short(address)}
+                                    {short(addressRecord.address)}
                                 </span>
                             </div>
                         </div>
@@ -141,7 +148,12 @@ export default function AccountCard({ address }: { address: string | undefined }
                 </div>
             </div>
 
-            {accountPanelOpen && <AccountPanel address={address} accountPanelOpen={accountPanelOpen} setAccountPanelOpen={setAccountPanelOpen} />}
+            {accountPanelOpen && <AccountPanel
+                addressRecord={addressRecord}
+                accountPanelOpen={accountPanelOpen}
+                setAccountPanelOpen={setAccountPanelOpen}
+                setAddressRecord={setAddressRecord}
+            />}
 
             {/* ====== 样式（更丝滑）====== */}
             <style jsx>{`
