@@ -6,6 +6,8 @@ import { getEthereumTransactions } from "../etherum/lib/mainnet";
 import { getZkSyncTransactions } from "../etherum/lib/zksync";
 import { getSepoliaTransactions } from "../etherum/lib/sepolia";
 
+import { sendPaymasterTransaction } from '../etherum/lib/zksync'
+
 
 export interface UserTxInput {
   to: `0x${string}`;           // 必填：收款地址
@@ -45,10 +47,22 @@ export async function getTransactions(address: string, network: string = "ethere
  * @returns 交易哈希
  */
 export async function sendTransactions(
+  network: string,
   walletClient: WalletClient,
   userInput: UserTxInput
-) : Promise<`0x${string}`> {
-  const serializedTransaction = await signTransaction(walletClient, userInput);
-  const hash = await walletClient.sendRawTransaction({ serializedTransaction })
-  return hash;
+): Promise<`0x${string}`> {
+  if (network !== "zksync") {
+    const serializedTransaction = await signTransaction(walletClient, userInput);
+    if (serializedTransaction) {
+      const hash = await walletClient.sendRawTransaction({ serializedTransaction })
+      return hash;
+    } else {
+      throw Error("发送交易失败");
+    }
+  } else {
+    const hash = sendPaymasterTransaction(walletClient, userInput);
+    return hash;
+  }
+
+
 }

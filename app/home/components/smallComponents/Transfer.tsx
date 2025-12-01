@@ -250,7 +250,7 @@ export default function Transfer({ setSentTransactionOpen
         }
       }
 
-      const hash = await sendTransactions(walletClient, userInput);
+      const hash = await sendTransactions(network, walletClient, userInput);
       setTxHash(hash);
 
       setTimeout(() => {

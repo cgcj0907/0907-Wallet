@@ -1,6 +1,7 @@
 // sign.ts
-import { WalletClient, PublicClient, createPublicClient, http, LocalAccount } from "viem";
-import { sepolia } from "viem/chains";
+import { WalletClient } from "viem";
+
+;
 
 interface UserTxInput {
   to: `0x${string}`;
@@ -19,28 +20,28 @@ export async function signTransaction(
   userInput: UserTxInput
 ) {
 
-
   const account = walletClient.account;
 
   if (!account) throw new Error("WalletClient 缺少 Local Account!");
+    // ===== 1. 准备交易 =====
+    const request = await walletClient.prepareTransactionRequest({
+      chain: walletClient.chain!,
+      account,
+      to: userInput.to,
+      value: BigInt(userInput.value),
 
-  // ===== 1. 准备交易 =====
-  const request = await walletClient.prepareTransactionRequest({
-    chain: walletClient.chain!,
-    account,
-    to: userInput.to,
-    value: BigInt(userInput.value),
+      ...(userInput.data ? { data: userInput.data } : {}),
+      ...(userInput.gasLimit ? { gas: BigInt(userInput.gasLimit) } : {}),
+      ...(userInput.maxFeePerGas ? { maxFeePerGas: BigInt(userInput.maxFeePerGas) } : {}),
+      ...(userInput.maxPriorityFeePerGas
+        ? { maxPriorityFeePerGas: BigInt(userInput.maxPriorityFeePerGas) }
+        : {}),
+    });
 
-    ...(userInput.data ? { data: userInput.data } : {}),
-    ...(userInput.gasLimit ? { gas: BigInt(userInput.gasLimit) } : {}),
-    ...(userInput.maxFeePerGas ? { maxFeePerGas: BigInt(userInput.maxFeePerGas) } : {}),
-    ...(userInput.maxPriorityFeePerGas
-      ? { maxPriorityFeePerGas: BigInt(userInput.maxPriorityFeePerGas) }
-      : {}),
-  });
+    // ===== 2. 本地签名 =====
+    const serializedTransaction = await walletClient.signTransaction(request) as `0x${string}`;
 
-  // ===== 2. 本地签名（你想做的事）=====
-  const serializedTransaction = await walletClient.signTransaction(request) as `0x${string}`;
+    return serializedTransaction;
 
-  return serializedTransaction;
 }
+

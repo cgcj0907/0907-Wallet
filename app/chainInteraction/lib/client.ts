@@ -1,13 +1,17 @@
 import { WalletClient } from "viem";
 
-import { createSepoliaClient } from "../etherum/lib/sepolia";
+import { createSepoliaWalletClient } from "../etherum/lib/sepolia";
+import { createEthereumWalletClient } from "../etherum/lib/mainnet";
+import { createZkSyncWalletClient } from "../etherum/lib/zksync";
 
 
 const WALLET_PROVIDERS: Record<
   string,
   (keyPath: string, password: string) => Promise<WalletClient>
 > = {
-  sepolia: createSepoliaClient,
+  sepolia: createSepoliaWalletClient,
+  ethereum: createEthereumWalletClient,
+  zksync: createZkSyncWalletClient,
 };
 
 
@@ -19,6 +23,7 @@ export async function getWalletClient(
   keyPath: string,
   password: string
 ): Promise<WalletClient> {
+  network = network.toLowerCase();
   const createFn = WALLET_PROVIDERS[network];
   if (!createFn) throw new Error(`Unsupported network: ${network}`);
   return await createFn(keyPath, password);

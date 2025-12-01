@@ -3,6 +3,8 @@ import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 
 import { getPrivateKey } from "@/app/walletManagement/lib/getPrivateKey";
+
+const INFURA_API_KEY = process.env.NEXT_PUBLIC_INFURA_API_KEY!;
 const ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || '';
 const CHAIN_ID = 11155111;
 
@@ -15,7 +17,7 @@ export async function getSepoliaTransactions(address: string) {
   return fetch(`${BASE_URL}&action=txlist&address=${address}&page=1000`);
 }
 
-export async function createSepoliaClient(
+export async function createSepoliaWalletClient(
   keyPath: string,
   password: string
 ): Promise<WalletClient> {
@@ -27,7 +29,7 @@ export async function createSepoliaClient(
     account,
     chain: sepolia,
     transport: http(
-      `https://sepolia.infura.io/v3//v3/${process.env.NEXT_PUBLIC_INFURA_API_KEY}`
+      `https://sepolia.infura.io/v3//v3/${INFURA_API_KEY}`
     ),
   });
 }

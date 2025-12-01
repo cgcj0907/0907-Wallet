@@ -10,6 +10,8 @@ import TokenCard from './components/TokenCard';
 import TransactionCard from './components/TransactionCard';
 
 
+
+
 export default function WalletHome() {
   const [addressRecord, setAddressRecord] = useState<AddressRecord>()
   const [tab, setTab] = useState<'assets' | 'activity'>('assets');
@@ -20,7 +22,6 @@ export default function WalletHome() {
   useEffect(() => {
     (async () => {
       try {
-
         // 如果 localStorage 没有 currentNetwork，则设置默认为 ethereum
         if (!localStorage.getItem('currentNetwork')) {
           localStorage.setItem('currentNetwork', 'ethereum');

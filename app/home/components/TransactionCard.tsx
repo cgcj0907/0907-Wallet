@@ -116,7 +116,7 @@ export default function TransactionCard({
           const timeB = Number(b.timeStamp) || 0;
           return timeB - timeA;
         })
-        .map((tx) => {
+        .map((tx, index) => {
           const tokenDecimals = Number(tx.tokenDecimal ?? '18');
           const tokenSymbol = tx.tokenSymbol ?? (tx.contractAddress ? 'TOKEN' : 'ETH');
 
@@ -173,7 +173,7 @@ export default function TransactionCard({
 
           return (
             <div
-              key={tx.hash}
+              key={`${tx.hash}-${index}`}
               className="bg-linear-to-br from-sky-50 to-white border border-sky-100 rounded-lg p-4 shadow-sm cursor-pointer transition-transform hover:scale-[1.001]"
               onClick={() => setExpandedHash(expandedHash === tx.hash ? null : tx.hash)}
             >
