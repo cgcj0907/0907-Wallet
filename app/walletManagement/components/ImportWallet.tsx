@@ -14,6 +14,7 @@ import { saveAddress } from '../lib/saveAddress';
 import { saveWallet, countWallet } from '../lib/saveWallet';
 import { encryptWallet } from '../lib/cryptoWallet';
 import { AddressRecord, countAddress } from '../lib/saveAddress';
+import { isLoggedInLocal } from '@/app/lib/auth';
 
 
 type LanguageOption = 'auto' | 'en' | 'zh';
@@ -89,14 +90,6 @@ export default function ImportWallet() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [wordCount]);
 
-    // 简单的本地登录判断（根据 localStorage 中的 currentAddress 判断）
-    const isLoggedInLocal = () => {
-        try {
-            return typeof window !== 'undefined' && !!localStorage.getItem('currentAddress');
-        } catch {
-            return false;
-        }
-    };
 
     // ======= 辅助函数：读取/写入 助记词格子 =======
     const getPhraseFromInputs = () => words.map(w => w.trim()).filter(Boolean).join(' ').trim();

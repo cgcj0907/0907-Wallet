@@ -6,11 +6,14 @@ import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 
 import  Transfer  from './smallComponents/Transfer';
+import  Receive from './smallComponents/Receive';
+
 export default function MainCard({ address, network }: { address: string | undefined, network: string | null }) {
     const [balance, setBalance] = useState<string>('0.0');
     const [price, setPrice] = useState<number>(0);
     const [symbol, setSymbol] = useState<string>('ETH');
     const [sendTransactionOpen, setSendTransactionOpen] = useState(false);
+    const [receiveOpen, setReceiveOpen] = useState(false);
 
 
     useEffect(() => {
@@ -67,12 +70,13 @@ export default function MainCard({ address, network }: { address: string | undef
                 </button>
                 {sendTransactionOpen && <Transfer setSentTransactionOpen={setSendTransactionOpen}/>}
                 <button
-                    onClick={() => alert('接收（演示）')}
+                    onClick={() => setReceiveOpen(true)}
                     className="w-full rounded-xl py-3 bg-white border border-sky-200 text-sky-700 font-medium hover:bg-sky-50 transition flex items-center justify-center gap-2"
                 >
                     <i className="fa-solid fa-qrcode"></i>
                     <span>接受</span>
                 </button>
+                {receiveOpen && <Receive address={address} setReceiveOpen={setReceiveOpen}/>}
             </div>
         </div>)
 

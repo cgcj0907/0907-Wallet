@@ -7,11 +7,12 @@ import { sendTransactions, UserTxInput } from "@/app/chainInteraction/lib/transa
 import QrScanner from 'qr-scanner'; // 你要求的引入方式
 
 
-interface TransferProps {
-  setSentTransactionOpen: (open: boolean) => void;
-}
 
-export default function Transfer({ setSentTransactionOpen }: TransferProps) {
+export default function Transfer({ setSentTransactionOpen
+
+}: {
+  setSentTransactionOpen: (open: boolean) => void;
+}) {
   const [form, setForm] = useState<UserTxInput & { password: string }>({
     to: "" as `0x${string}`,
     value: "",
@@ -79,7 +80,7 @@ export default function Transfer({ setSentTransactionOpen }: TransferProps) {
         return next;
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [showAdvanced]);
 
 
@@ -282,7 +283,7 @@ export default function Transfer({ setSentTransactionOpen }: TransferProps) {
   // ========== UI ==========
   return (
     <>
-      <div className="fixed inset-0 flex items-center justify-center bg-sky-100 bg-opacity-60 backdrop-blur-sm z-50 p-4">
+      <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50 p-4">
         <div className="bg-white/95 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-sky-100">
           {/* Header */}
           <div className="bg-linear-to-r from-sky-200 to-sky-100 p-6 text-sky-800">
@@ -526,41 +527,69 @@ export default function Transfer({ setSentTransactionOpen }: TransferProps) {
 
       {/* 扫码 Modal */}
       {scanOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg bg-white rounded-2xl p-4 border border-sky-100">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium">扫码填入地址</h3>
-              <div className="flex items-center gap-2">
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1 rounded border border-sky-100 text-sm"
-                >
-                  上传图片
-                </button>
-                <button
-                  onClick={closeScanModal}
-                  className="px-3 py-1 rounded bg-sky-100 text-sm"
-                >
-                  关闭
-                </button>
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          {/* 模糊背景层 */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"></div>
+          <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-200/50">
+            {/* 标题和关闭按钮 */}
+            <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">扫码填入地址</h3>
+                <p className="text-sm text-gray-500 mt-1">对准二维码自动识别</p>
               </div>
+              <button
+                onClick={closeScanModal}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+                aria-label="关闭"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <div className="space-y-3">
-              <div className="w-full h-64 bg-black/5 rounded overflow-hidden flex items-center justify-center">
-                <video ref={videoRef} className="w-full h-full object-cover" muted />
+            {/* 扫码区域 */}
+            <div className="p-6 flex flex-col items-center">
+              <div className="relative w-72 h-72 border-2 border-blue-400 rounded-lg flex items-center justify-center">
+                <video
+                  ref={videoRef}
+                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                  muted
+                />
+                {/* 四角装饰 */}
+                <div className="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 border-blue-500 rounded-tl-lg"></div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 border-t-2 border-r-2 border-blue-500 rounded-tr-lg"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-2 border-l-2 border-blue-500 rounded-bl-lg"></div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-blue-500 rounded-br-lg"></div>
               </div>
 
-              <div className="text-sm text-sky-600">
-                将二维码对准摄像头，识别到地址后会自动填入输入框。
+              {/* 操作按钮 */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 transition-all shadow-lg active:scale-95"
+                >
+                  上传二维码图片
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
               </div>
 
-              {scanError && <div className="text-red-500 text-sm">{scanError}</div>}
+              {/* 提示信息 */}
+              {scanError && (
+                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-red-500 bg-red-50 py-2 rounded-lg w-full">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{scanError}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
+
+
+
     </>
   );
 }

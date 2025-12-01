@@ -27,7 +27,7 @@ export default function SwitchAccount({
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
-            <div className="bg-linear-to-b from-blue-50 to-sky-50 rounded-lg p-4 w-80 relative border border-sky-100 shadow-lg">
+            <div className="bg-white rounded-lg p-4 w-80 relative border border-sky-100 shadow-lg">
                 <div className="flex justify-between items-center">
 
 

@@ -94,11 +94,10 @@ export default function Login() {
         localStorage.setItem('loginExpiresAt', (Date.now() + 10 * 60 * 1000).toString());
 
         // 若未缓存当前地址，则从 IndexedDB 读取第一个地址作为默认
-        if (!localStorage.getItem('currentAddress')) {
-          const addressRecord: AddressRecord | undefined = await getAddress('0');
-          if (addressRecord?.address) {
-            localStorage.setItem('currentAddress', addressRecord.address);
-          }
+        if (!localStorage.getItem('currentAddressKeyPath')) {
+
+            localStorage.setItem('currentAddressKeyPath', '0');
+          
         }
 
         setPassword('');
