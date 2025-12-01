@@ -111,7 +111,11 @@ export default function TransactionCard({
 
       {transactions
         .slice()
-        .sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp))
+        .sort((a, b) => {
+          const timeA = Number(a.timeStamp) || 0;
+          const timeB = Number(b.timeStamp) || 0;
+          return timeB - timeA;
+        })
         .map((tx) => {
           const tokenDecimals = Number(tx.tokenDecimal ?? '18');
           const tokenSymbol = tx.tokenSymbol ?? (tx.contractAddress ? 'TOKEN' : 'ETH');
