@@ -1,4 +1,4 @@
-import { WalletClient, createWalletClient, createPublicClient, http, encodeFunctionData, decodeFunctionData } from "viem";
+import { WalletClient, createWalletClient, createPublicClient, http, encodeFunctionData } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { eip712WalletActions } from 'viem/zksync';
 
@@ -6,7 +6,7 @@ import { zksync } from 'viem/chains'
 
 import { getPrivateKey } from "@/app/walletManagement/lib/getPrivateKey";
 
-import { erc20Abi } from "../abi/erc20Abi";
+import { erc20Abi } from "viem";
 
 const INFURA_API_KEY = process.env.NEXT_PUBLIC_INFURA_API_KEY;
 const ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || '';
@@ -26,8 +26,16 @@ export interface UserTxInput {
   maxPriorityFeePerGas?: string; // 可选：小费（高级）
 }
 
-export async function getZkSyncBalance(address: string) {
-  return fetch(`${BASE_URL}&action=tokenbalance&address=${address}`);
+export async function getZkSyncBalance(address: string) {  
+    
+      const client = createZkSyncPublicClient();
+      const data = await client.readContract({
+          address: CONTRACT_ADDRESS,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [address as `0x${string}`]
+      })
+  return data;
 }
 
 export async function getZkSyncTransactions(address: string) {
@@ -51,12 +59,11 @@ export async function createZkSyncWalletClient(
   }).extend(eip712WalletActions());
 }
 
-export async function createZksyncPublicClient() {
+
+export function createZkSyncPublicClient() {
   const publicClient = createPublicClient({
     chain: zksync,
-    transport: http(
-      `https://zksync-mainnet.infura.io/v3/${INFURA_API_KEY}`
-    )
+    transport: http()
   });
   return publicClient;
 }
@@ -109,54 +116,23 @@ export async function sendPaymasterTransaction(
   const paymaster = rawTx?.customData?.paymasterParams?.paymaster;
   const paymasterInput = rawTx?.customData?.paymasterParams?.paymasterInput;
 
-// 组装 txPayload（完整字段）
-const txPayload: any = {
-  account: walletClient.account,
-  to: rawTx.to ?? CONTRACT_ADDRESS,
-  value: rawTx.value ? BigInt(rawTx.value) : BigInt(0),
-  chain: zksync,
-  data: rawTx.data ?? data,
-  paymaster,
-  paymasterInput,
-  gas: rawTx.gasLimit ? BigInt(rawTx.gasLimit) : BigInt(0),
-  gasPerPubdata: rawTx.customData?.gasPerPubdata
-    ? BigInt(rawTx.customData.gasPerPubdata)
-    : BigInt(0),
-  maxFeePerGas: rawTx.maxFeePerGas ? BigInt(rawTx.maxFeePerGas) : BigInt(0),
-  maxPriorityFeePerGas: BigInt(0),
-};
+  // 组装 txPayload（完整字段）
+  const txPayload: any = {
+    account: walletClient.account,
+    to: rawTx.to ?? CONTRACT_ADDRESS,
+    value: rawTx.value ? BigInt(rawTx.value) : BigInt(0),
+    chain: zksync,
+    data: rawTx.data ?? data,
+    paymaster,
+    paymasterInput,
+    gas: rawTx.gasLimit ? BigInt(rawTx.gasLimit) : BigInt(0),
+    gasPerPubdata: rawTx.customData?.gasPerPubdata
+      ? BigInt(rawTx.customData.gasPerPubdata)
+      : BigInt(0),
+    maxFeePerGas: rawTx.maxFeePerGas ? BigInt(rawTx.maxFeePerGas) : BigInt(0),
+    maxPriorityFeePerGas: BigInt(0),
+  };
 
-
-  // nonce：优先用 API 返回的 nonce，如果没有，尝试从 walletClient / publicClient 获取；
-  // 如果都不可用，则不设置 nonce（让 walletClient 自行处理）
-  if (rawTx.nonce !== undefined && rawTx.nonce !== null) {
-    try {
-      txPayload.nonce = BigInt(rawTx.nonce);
-    } catch {
-      // ignore parsing error
-    }
-  } else {
-    // 尝试从 walletClient 获取交易计数（注意：不同项目暴露的 API 名称可能不同）
-    try {
-      // 常见做法：publicClient.getTransactionCount({ address, blockTag: 'pending' })
-      // 但因为你说 walletClient 的创建不要改，这里尝试可选方式：
-      const anyClient = walletClient as any;
-      if (typeof anyClient.getTransactionCount === "function") {
-        const txCount = await anyClient.getTransactionCount({
-          address: from,
-          blockTag: "pending",
-        });
-        txPayload.nonce = BigInt(txCount);
-      } else if (typeof anyClient.getNonce === "function") {
-        const txCount = await anyClient.getNonce({ address: from });
-        txPayload.nonce = BigInt(txCount);
-      } else {
-        // 最后退回：不设置 nonce，交给 walletClient.sendTransaction 自行填充
-      }
-    } catch (e) {
-      // 获取 nonce 失败，不阻塞，继续让 walletClient 处理
-    }
-  }
 
   // 发送交易（实际上使用 walletClient）
   const hash = await walletClient.sendTransaction(txPayload);
@@ -164,12 +140,3 @@ const txPayload: any = {
 }
 
 
-// (async () => {
-//     const data = '0xa9059cbb00000000000000000000000014e10584fdbeadf2429a2c213bf1c575bbcc59410000000000000000000000000000000000000000000000004563918244f40000';
-//     const de_data = decodeFunctionData({
-//     abi: erc20Abi,
-//     data: data
-//   });
-//   console.log(de_data);
-  
-// })()

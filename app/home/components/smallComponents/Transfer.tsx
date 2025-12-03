@@ -6,7 +6,7 @@ import { getWalletClient } from "@/app/chainInteraction/lib/client";
 import { sendTransactions, UserTxInput } from "@/app/chainInteraction/lib/transaction";
 import QrScanner from 'qr-scanner'; // 你要求的引入方式
 
-
+const LAYER2_LIST: string[] = ['zksync'];
 
 export default function Transfer({ setSentTransactionOpen
 
@@ -27,6 +27,9 @@ export default function Transfer({ setSentTransactionOpen
   const [keyPath, setKeyPath] = useState<string>("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showAdvancedInfo, setShowAdvancedInfo] = useState(false);
+
+  // 新增：Layer2 提示开关
+  const [showLayer2Info, setShowLayer2Info] = useState(false);
 
   // 建议值（保底）
   const suggestedMaxFeeGwei = "2";
@@ -82,7 +85,6 @@ export default function Transfer({ setSentTransactionOpen
     }
 
   }, [showAdvanced]);
-
 
   const startScanner = async () => {
     setScanError(null);
@@ -253,9 +255,6 @@ export default function Transfer({ setSentTransactionOpen
       const hash = await sendTransactions(network, walletClient, userInput);
       setTxHash(hash);
 
-      setTimeout(() => {
-        setSentTransactionOpen(false);
-      }, 2000);
     } catch (err: any) {
       console.error("Transaction error:", err);
       let errorMessage = "转账失败";
@@ -304,6 +303,39 @@ export default function Transfer({ setSentTransactionOpen
               <div className="flex items-center gap-2 bg-sky-50 rounded-lg p-3 border border-sky-100">
                 <i className="fa-solid fa-globe"></i>
                 <div className="text-sky-800 font-medium">{network || "未设置"}</div>
+                {/* 新增：Layer2 提示按钮（靠右） */}
+                {LAYER2_LIST.includes(network) &&
+                  <button
+                    type="button"
+                    onClick={() => setShowLayer2Info(v => !v)}
+                    className="ml-auto shrink-0 flex items-center gap-2 px-3 py-1 rounded-lg border border-sky-100 bg-white hover:bg-sky-50 text-sky-700 text-sm"
+                    title="Layer2 代币转账需知"
+                    aria-expanded={showLayer2Info}
+                  >
+                    <i className="fa-solid fa-circle-exclamation"></i>
+                    Layer2 代币转账需知
+                  </button>
+                }
+              </div>
+
+              {/* 新增：Layer2 说明面板 */}
+              <div
+                className={`mt-2 px-4 py-3 rounded-lg border border-sky-100 bg-sky-50 text-sky-700 text-sm transition-all overflow-hidden ${showLayer2Info ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+                style={{ transitionProperty: 'max-height, opacity', transitionDuration: '220ms' }}
+                aria-hidden={!showLayer2Info}
+              >
+                <strong className="block mb-2">Layer2 代币转账需知</strong>
+                <p className="text-xs mb-2">
+                  在某些 Layer2 网络上，代币转账会采用 gasless / paymaster 赞助的机制；一次“用户体验上的单笔转账”背后可能对应多笔链上操作，常见流程示例如下：
+                </p>
+                <ol className="list-decimal pl-5 space-y-1 text-xs">
+                  <li><span className="font-medium">Paymaster 预支手续费：</span>Paymaster（赞助方）先行为该次操作预支或抵押所需的手续费。</li>
+                  <li><span className="font-medium">用户转账给目的账户：</span>实际的代币从用户地址转入目标地址（这步是用户意图的转账）。</li>
+                  <li><span className="font-medium">用户支付手续费给 Paymaster：</span>随后由链上或协议内的结算把手续费回补给 Paymaster（可能在同一笔或另外的交易中完成）。</li>
+                </ol>
+                <p className="text-xs mt-2 text-sky-600">
+                  注意：不同 Layer2 / Paymaster 实现细节不同（是否收费、是否需要额外授权、是否产生额外事件等），请以链上合约或钱包文档为准。
+                </p>
               </div>
             </div>
 
@@ -382,11 +414,7 @@ export default function Transfer({ setSentTransactionOpen
                     onClick={() => setShowAdvanced(prev => !prev)}
                     className="flex items-center gap-2 text-left text-sm font-medium text-sky-700 hover:text-sky-900 transition-colors"
                   >
-                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full border border-sky-200 shadow-sm bg-white`}>
-                      <svg className={`w-4 h-4 transform ${showAdvanced ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </span>
+                    {showAdvanced ? <i className="fa-solid fa-caret-up"></i> : <i className="fa-solid fa-caret-down"></i>}
                     <span>高级选项</span>
                   </button>
 
@@ -394,22 +422,17 @@ export default function Transfer({ setSentTransactionOpen
                     type="button"
                     onClick={() => setShowAdvancedInfo(v => !v)}
                     aria-label="高级选项说明"
-                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-sky-100 shadow-sm text-sky-600 hover:bg-sky-50 transition"
+                    className=" text-sky-700"
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1" />
-                      <circle cx="12" cy="8" r="1" strokeWidth="0" fill="currentColor" />
-                      <path d="M12 2a10 10 0 100 20 10 10 0 000-20z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <i className="fa-solid fa-circle-exclamation"></i>
                   </button>
                 </div>
               </div>
 
               <div
-                className={`mt-3 p-3 rounded-lg border border-sky-100 bg-sky-50 text-sky-700 text-sm transition-all overflow-hidden ${showAdvancedInfo ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
+                className={`mt-1 rounded-lg border border-sky-100 bg-sky-50 text-sky-700 text-sm transition-all overflow-hidden ${showAdvancedInfo ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
                 style={{ transitionProperty: 'max-height, opacity', transitionDuration: '250ms' }}
               >
-                <strong className="block mb-1">高级选项说明</strong>
                 <ul className="list-disc pl-4 space-y-1">
                   <li><span className="font-medium">Gas Limit</span>: 交易计算的 gas 上限，通常为 21000</li>
                   <li><span className="font-medium">Max Fee (Gwei)</span>: 每单位 gas 的最高费用（包含基础费用和优先费用）</li>
@@ -418,7 +441,7 @@ export default function Transfer({ setSentTransactionOpen
               </div>
 
               {showAdvanced && (
-                <div className="mt-4 space-y-4">
+                <div className="mt-3 space-y-4">
                   <div>
                     <label className="text-sm font-medium text-sky-700 block mb-2">Data (可选)</label>
                     <input
@@ -482,7 +505,7 @@ export default function Transfer({ setSentTransactionOpen
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-linear-to-r from-sky-300 to-sky-200 text-white py-4 rounded-xl font-semibold text-lg hover:from-sky-350 hover:to-sky-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mt-6"
+              className="w-full bg-linear-to-r from-sky-300 to-sky-200 text-white py-4 rounded-xl font-semibold text-lg hover:from-sky-350 hover:to-sky-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mt-3"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -504,10 +527,9 @@ export default function Transfer({ setSentTransactionOpen
                 <svg className="w-5 h-5 text-sky-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sky-800 font-medium">交易成功!</span>
+                <span className="text-sky-800 font-medium">交易已发送!</span>
               </div>
-              <p className="text-sky-700 text-sm mt-1 font-mono break-all">哈希: {txHash}</p>
-              <p className="text-sky-600 text-xs mt-2">弹窗将在2秒后自动关闭...</p>
+              <p className="text-sky-700 text-sm mt-1 font-mono break-all">Tx Hash: {txHash}</p>
             </div>
           )}
 
@@ -527,10 +549,8 @@ export default function Transfer({ setSentTransactionOpen
 
       {/* 扫码 Modal */}
       {scanOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-          {/* 模糊背景层 */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"></div>
-          <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-200/50">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-white">
+          <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border  border-gray-200/50">
             {/* 标题和关闭按钮 */}
             <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-center">
               <div>
@@ -587,8 +607,6 @@ export default function Transfer({ setSentTransactionOpen
           </div>
         </div>
       )}
-
-
 
     </>
   );

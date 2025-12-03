@@ -1,89 +1,187 @@
 'use client';
 
-import { Network, getAllNetworks } from '@/app/networkManagement/lib/saveNetwork';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import * as Web3Icons from '@web3icons/react';
 import { getBalance } from '@/app/chainInteraction/lib/account';
-import { getPrice } from '@/app/chainInteraction/lib/network';
+import { getPrice } from '@/app/chainInteraction/lib/priceFeed';
 
-export default function TokenCard({ address }: { address: string | undefined }) {
-  const [networks, setNetworks] = useState<Network[]>([]);
+type Props = { address?: string; network: string | null };
 
-  const [balances, setBalances] = useState<Record<string, string>>({});
+const TOKEN_LIST: Record<string, string[]> = {
+  ethereum: ['Ethereum', 'USDT', 'USDC', 'DAI', 'UNI', 'AAVE'],
+  sepolia: ['Sepolia'],
+  zksync: ['ZkSync'],
+};
+
+/**
+ * 本地图标映射：
+ * 把你自己的图标文件放到 public/tokens/ 下，并在这里写上对应文件名（建议全部小写）。
+ * 例如：public/tokens/usdc.png, public/tokens/usdt.png, public/tokens/eth.png
+ */
+const TOKEN_ICON_MAP: Record<string, string> = {
+  Ethereum: 'eth.png',
+  USDT: 'usdt.svg',
+  USDC: 'usdc.svg',
+  DAI: 'dai.svg',
+  UNI: 'uni.svg',
+  AAVE: 'aave.svg',
+  Sepolia: 'eth.png',
+  ZkSync: 'zk.png',
+};
+
+/**
+ * 展示用简称（symbol）
+ */
+const TOKEN_SYMBOL_MAP: Record<string, string> = {
+  Ethereum: 'ETH',
+  USDT: 'USDT',
+  USDC: 'USDC',
+  DAI: 'DAI',
+  UNI: 'UNI',
+  AAVE: 'AAVE',
+  Sepolia: 'SepoliaETH',
+  ZkSync: 'ZK',
+};
+
+const getLocalLogoUrl = (token: string) => {
+  const iconFile = TOKEN_ICON_MAP[token];
+  if (iconFile) return `/tokens/${iconFile}`;
+  return null;
+};
+
+
+
+export default function TokenCard({ address, network }: Props) {
   const [prices, setPrices] = useState<Record<string, number>>({});
+  const [balances, setBalances] = useState<Record<string, string>>({});
+  const selectedNetwork = (network || 'ethereum').toLowerCase();
 
-  // 加载网络和地址
+  // determine which tokens to show based on parent-provided network
+  const tokens = TOKEN_LIST[selectedNetwork] ?? TOKEN_LIST['ethereum'];
+
   useEffect(() => {
-    (async () => {
-      setNetworks(await getAllNetworks());
-
-    })();
-  }, []);
-
-  // 加载价格 & 余额
-  useEffect(() => {
-    if (!address || networks.length === 0) return;
+    let cancelled = false;
 
     (async () => {
-      const newBalances: Record<string, string> = {};
+      if (!selectedNetwork) return;
+
       const newPrices: Record<string, number> = {};
+      const newBalances: Record<string, string> = {};
 
-      for (const net of networks) {
-        newBalances[net.name] = await getBalance(address, net.name);
-        newPrices[net.name] = await getPrice(net.name);
-      }
+      await Promise.all(
+        tokens.map(async (t) => {
+          // 直接把显示名 t 传到 getPrice/getBalance，库内部会做小写处理
+          try {
+            const p = await getPrice(selectedNetwork, t);
+            if (!cancelled) newPrices[t] = Number(p ?? 0);
+          } catch (e) {
+            console.error('getPrice error', selectedNetwork, t, e);
+            if (!cancelled) newPrices[t] = NaN;
+          }
 
-      setBalances(newBalances);
-      setPrices(newPrices);
+          // fetch balance using your provided getBalance wrapper
+          if (address) {
+            try {
+              const bal = await getBalance(address, t);
+              if (!cancelled) newBalances[t] = bal;
+            } catch (e) {
+              console.error('getBalance error', t, e);
+              if (!cancelled) newBalances[t] = '读取失败';
+            }
+          } else {
+            if (!cancelled) newBalances[t] = '未连接地址';
+          }
+        })
+      );
+
+      if (!cancelled) setPrices(newPrices);
+      if (!cancelled) setBalances(newBalances);
     })();
-  }, [address, networks]);
 
-  const getLogoUrl = (network: string) =>
-    `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${network}/info/logo.png`;
+    return () => {
+      cancelled = true;
+    };
+  }, [address, selectedNetwork]);
+
+  // small badge for testnets
+  const isTestnet = selectedNetwork === 'sepolia';
+
+  // Render icon: prefer @web3icons/react component, then local public/tokens, then trustwallet fallback
+  const renderIcon = (token: string) => {
+    const symbol = TOKEN_SYMBOL_MAP[token] ?? token;
+    // construct component name like TokenETH, TokenUSDC...
+    const compName = `Token${String(symbol).replace(/[^A-Za-z0-9]/g, '')}`;
+    const IconComp = (Web3Icons as any)[compName];
+    if (IconComp) {
+      try {
+        return <IconComp variant="branded" size={28} />;
+      } catch (e) {
+       
+      }
+    }
+
+    const local = getLocalLogoUrl(token);
+    if (local) {
+      return (
+        <img
+          src={local}
+          alt={`${token} logo`}
+          className="w-7 h-7 rounded-full object-contain shadow-sm"
+          onError={(e) => {
+            const img = e.currentTarget as HTMLImageElement;
+            img.onerror = null;
+            
+          }}
+        />
+      );
+    }
+
+  };
 
   return (
-     <div className="p-4 space-y-4">
-      <h2 className="text-2xl font-semibold mb-2">Tokens</h2>
-
-      <div className="space-y-3">
-        {networks.map((t) => (
-          <div
-            key={t.name}
-            className="flex items-center justify-between py-3 rounded-xl bg-sky-50/40 hover:bg-sky-50 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <img
-                src={getLogoUrl(t.name)}
-                className="w-7 h-7 rounded-full object-contain shadow-sm"
-                onError={(e) => (e.currentTarget.style.display = 'none')}
-              />
-
-              <div className="leading-tight">
-                <div className="text-sm font-semibold text-sky-900">
-                  {t.symbol}
-                </div>
-                <div className="text-xs text-sky-500 mt-0.5">
-                  {prices[t.name] ? `$${prices[t.name]}` : '加载中...'}
-                </div>
-              </div>
-            </div>
-
-            <div className="text-right">
-              <div className="text-sm font-medium text-sky-900">
-                {balances[t.name] ?? '读取中...'}
-              </div>
-            </div>
-          </div>
-        ))}
+    <div className="p-4 space-y-4 min-h-80">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold mb-2">Tokens</h2>
+        {isTestnet && (
+          <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">测试网</span>
+        )}
       </div>
 
-      <button
-        onClick={() => alert('导入代币（演示）')}
-        className="w-full py-2.5 mt-5 rounded-xl border border-sky-200
-                 text-sm text-sky-700 hover:bg-sky-50 transition-colors"
-      >
-        导入代币
-      </button>
+      <div className="space-y-3">
+        {tokens.map((token) => {
+          const price = prices[token];
+          const balance = balances[token];
+          const symbol = TOKEN_SYMBOL_MAP[token] ?? token;
+
+          return (
+            <div
+              key={token}
+              className="flex items-center p-3 justify-between rounded-xl bg-sky-50/40 hover:bg-sky-50 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                {/* icon */}
+                <div className="w-7 h-7 flex items-center justify-center">
+                  {renderIcon(token)}
+                </div>
+
+                <div className="leading-tight">
+                  <div className="text-sm font-semibold text-sky-900 flex items-center gap-2">
+                    <span className="text-xs text-sky-500 px-1 py-0.5 bg-white/30 rounded">{symbol}</span>
+                  </div>
+                  <div className="text-xs text-sky-500 mt-0.5">
+                    {typeof price === 'number' && !Number.isNaN(price) ? `$${price}` : '加载中...'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <div className="text-sm font-medium text-sky-900">{balance ?? (address ? '读取中...' : '未连接地址')}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
     </div>
   );
-
 }

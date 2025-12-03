@@ -66,7 +66,6 @@ export default function Receive({
                     <h2 className="text-2xl font-bold bg-linear-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
                         接收资产
                     </h2>
-                    <p className="text-sky-500/80 text-sm mt-2">扫描二维码或复制地址</p>
                 </div>
 
                 {/* 二维码容器 */}
@@ -102,44 +101,6 @@ export default function Receive({
                     <div className="absolute -top-2 -right-2 w-6 h-6 border-t-2 border-r-2 border-sky-300 rounded-tr-xl"></div>
                     <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-2 border-l-2 border-sky-300 rounded-bl-xl"></div>
                     <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-sky-300 rounded-br-xl"></div>
-                </div>
-
-                {/* 地址区域 */}
-                <div className="w-full space-y-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-sky-700 flex items-center gap-2">
-                            <i className="fa-solid fa-address-card" style={{ color: "#74C0FC" }}></i>
-                            钱包地址
-                        </span>
-                        <button
-                            onClick={copyToClipboard}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${copied
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-sky-100 text-sky-700 hover:bg-sky-200 hover:text-sky-800'
-                                }`}
-                        >
-                            {copied ? (
-                                <>
-                                    <i className="fa-solid fa-check"></i>
-                                    已复制
-                                </>
-                            ) : (
-                                <>
-                                    <i className="fa-regular fa-copy"></i>
-                                    复制地址
-                                </>
-                            )}
-                        </button>
-                    </div>
-
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-linear-to-r from-sky-500/5 to-blue-500/5 rounded-xl blur-sm group-hover:blur-md transition-all duration-300"></div>
-                        <div className="relative p-4 bg-linear-to-r from-sky-50 to-blue-50/30 rounded-xl border border-sky-200/50 backdrop-blur-sm">
-                            <p className="text-sky-900/90 text-sm text-center font-mono break-all leading-relaxed select-all">
-                                {address}
-                            </p>
-                        </div>
-                    </div>
                 </div>
 
             </div>

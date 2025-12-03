@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@web3icons/react": "^4.1.4",
     "bip39": "^3.1.0",
     "boring-avatars": "^2.0.4",
     "clsx": "^2.1.1",

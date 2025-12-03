@@ -1,8 +1,9 @@
-import { WalletClient } from "viem";
+import {  WalletClient } from "viem";
 
-import { createSepoliaWalletClient } from "../etherum/lib/sepolia";
-import { createEthereumWalletClient } from "../etherum/lib/mainnet";
-import { createZkSyncWalletClient } from "../etherum/lib/zksync";
+
+import { createSepoliaWalletClient, createSepoliaPublicClient } from "../etherum/lib/sepolia";
+import { createEthereumWalletClient, createEthereumPublicClient } from "../etherum/lib/mainnet";
+import { createZkSyncWalletClient, createZkSyncPublicClient } from "../etherum/lib/zksync";
 
 
 const WALLET_PROVIDERS: Record<
@@ -12,6 +13,15 @@ const WALLET_PROVIDERS: Record<
   sepolia: createSepoliaWalletClient,
   ethereum: createEthereumWalletClient,
   zksync: createZkSyncWalletClient,
+};
+
+const PUBLIC_PROVIDERS: Record<
+  string,
+  () => any
+> = {
+  sepolia: createSepoliaPublicClient,
+  ethereum: createEthereumPublicClient,
+  zksync: createZkSyncPublicClient,
 };
 
 
@@ -27,4 +37,12 @@ export async function getWalletClient(
   const createFn = WALLET_PROVIDERS[network];
   if (!createFn) throw new Error(`Unsupported network: ${network}`);
   return await createFn(keyPath, password);
+}
+
+export function getPublicClient(network: string) {
+
+  network = network.toLowerCase();
+  const createFn = PUBLIC_PROVIDERS[network];
+  if (!createFn) throw new Error(`unsupported network: ${network}`);
+  return createFn();
 }

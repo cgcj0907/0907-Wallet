@@ -1,4 +1,4 @@
-import { WalletClient, createWalletClient, http } from "viem";
+import { WalletClient, createWalletClient, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 
@@ -34,3 +34,10 @@ export async function createSepoliaWalletClient(
   });
 }
 
+export function createSepoliaPublicClient() {
+  const publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http()
+  });
+  return publicClient;
+}

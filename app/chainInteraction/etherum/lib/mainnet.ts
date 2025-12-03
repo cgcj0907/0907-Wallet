@@ -1,4 +1,4 @@
-import { WalletClient, createWalletClient, http } from "viem";
+import { WalletClient, createWalletClient, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
 
@@ -31,4 +31,12 @@ export async function createEthereumWalletClient(
       `https://mainnet.infura.io/v3//v3/${INFURA_API_KEY}`
     ),
   });
+}
+
+export function createEthereumPublicClient() {
+  const publicClient = createPublicClient({
+    chain: mainnet,
+    transport: http()
+  });
+  return publicClient;
 }

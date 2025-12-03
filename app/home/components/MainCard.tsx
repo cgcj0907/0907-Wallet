@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPrice } from '@/app/chainInteraction/lib/network';
+import { getPrice } from '@/app/chainInteraction/lib/priceFeed';
 import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 
@@ -21,7 +21,7 @@ export default function MainCard({ address, network }: { address: string | undef
         (async () => {
             try {
 
-                setPrice(await getPrice(network ? network : "ethereum"));
+                setPrice(await getPrice(network ? network : "ethereum",network ? network : "ethereum"));
                 if (address) {
                     setBalance(await getBalance(address, network ? network : "ethereum"));
                 }

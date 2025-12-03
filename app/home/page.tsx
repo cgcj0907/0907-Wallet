@@ -95,7 +95,7 @@ export default function WalletHome() {
       {/* 内容区*/}
       <div>
         {tab === 'assets' && (
-          <TokenCard address={addressRecord?.address} />
+          <TokenCard address={addressRecord?.address} network={network} />
         )}
 
         {tab === 'activity' && (
@@ -103,7 +103,7 @@ export default function WalletHome() {
         )}
       </div>
 
-      <div className="text-center text-xs text-sky-400 mt-5">0907 WORLD · 赞助</div>
+      <div className="text-center text-xs text-sky-400 ">0907 WORLD · 赞助</div>
 
 
     </div>
