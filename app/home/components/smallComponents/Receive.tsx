@@ -10,21 +10,10 @@ export default function Receive({
     address: string | undefined;
     setReceiveOpen: (value: boolean) => void;
 }) {
-    const [copied, setCopied] = useState(false);
 
     if (!address || !address.startsWith('0x')) {
         return <div className="text-red-500 font-medium">无效地址</div>;
     }
-
-    const copyToClipboard = async () => {
-        try {
-            await navigator.clipboard.writeText(address);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch (err) {
-            console.error('复制失败:', err);
-        }
-    };
 
     // 点击外部关闭弹窗
     useEffect(() => {

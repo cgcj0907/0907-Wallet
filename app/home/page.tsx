@@ -16,7 +16,8 @@ export default function WalletHome() {
   const [addressRecord, setAddressRecord] = useState<AddressRecord>()
   const [tab, setTab] = useState<'assets' | 'activity'>('assets');
   const [network, setNetwork] = useState<string | null>('Ethereum');
-
+  const [totalBalance, setTotalBalance] = useState<number>(0);
+ 
 
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function WalletHome() {
 
         </div>
       </div>
-      <MainCard address={addressRecord?.address} network={network} />
+      <MainCard address={addressRecord?.address} network={network} totalBalance={totalBalance} />
 
       {/* 标签栏：简洁 */}
       <div className="flex gap-3 mb-4">
@@ -95,7 +96,7 @@ export default function WalletHome() {
       {/* 内容区*/}
       <div>
         {tab === 'assets' && (
-          <TokenCard address={addressRecord?.address} network={network} />
+          <TokenCard address={addressRecord?.address} network={network} setTotalBalance={setTotalBalance} />
         )}
 
         {tab === 'activity' && (

@@ -17,5 +17,5 @@ export async function getUSDCBalance(address: string) {
           functionName: 'balanceOf',
           args: [address as `0x${string}`]
       })
-  return data;
+  return data * BigInt(1e12);
 }

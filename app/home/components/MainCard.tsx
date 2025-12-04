@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPrice } from '@/app/chainInteraction/lib/priceFeed';
 import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 
 import  Transfer  from './smallComponents/Transfer';
 import  Receive from './smallComponents/Receive';
 
-export default function MainCard({ address, network }: { address: string | undefined, network: string | null }) {
+type props = { address: string | undefined, network: string | null, totalBalance: number }
+
+export default function MainCard({ address, network, totalBalance }: props) {
     const [balance, setBalance] = useState<string>('0.0');
-    const [price, setPrice] = useState<number>(0);
     const [symbol, setSymbol] = useState<string>('ETH');
     const [sendTransactionOpen, setSendTransactionOpen] = useState(false);
     const [receiveOpen, setReceiveOpen] = useState(false);
@@ -20,8 +20,6 @@ export default function MainCard({ address, network }: { address: string | undef
         // 自调用异步函数
         (async () => {
             try {
-
-                setPrice(await getPrice(network ? network : "ethereum",network ? network : "ethereum"));
                 if (address) {
                     setBalance(await getBalance(address, network ? network : "ethereum"));
                 }
@@ -48,7 +46,7 @@ export default function MainCard({ address, network }: { address: string | undef
                 <div>
                     <div className="text-2xl font-semibold text-sky-800 mt-1 ">
                         <i className="fa-solid fa-dollar-sign"></i>
-                        <span>{(price * Number(balance)).toFixed(2)} USD</span>
+                        <span>{totalBalance} USD</span>
                     </div>
 
                     <div className="text-sm ml-1.5 text-sky-500 mt-1 flex items-center gap-2">

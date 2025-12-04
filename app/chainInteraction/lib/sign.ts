@@ -12,6 +12,7 @@ interface UserTxInput {
   maxPriorityFeePerGas?: string;
 }
 
+
 /**
  * 本地签名交易（不发送，只返回序列化后的 rawTx）
  */

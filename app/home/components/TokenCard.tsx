@@ -5,18 +5,20 @@ import * as Web3Icons from '@web3icons/react';
 import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getPrice } from '@/app/chainInteraction/lib/priceFeed';
 
-type Props = { address?: string; network: string | null };
+type Props = { 
+  address?: string; 
+  network: string | null; 
+  setTotalBalance: (value: number) => void; 
+};
 
 const TOKEN_LIST: Record<string, string[]> = {
-  ethereum: ['Ethereum', 'USDT', 'USDC', 'DAI', 'UNI', 'AAVE'],
+  ethereum: ['Ethereum', 'USDT', 'USDC', 'DAI', 'UNI', 'AAVE' ],
   sepolia: ['Sepolia'],
   zksync: ['ZkSync'],
 };
 
 /**
  * 本地图标映射：
- * 把你自己的图标文件放到 public/tokens/ 下，并在这里写上对应文件名（建议全部小写）。
- * 例如：public/tokens/usdc.png, public/tokens/usdt.png, public/tokens/eth.png
  */
 const TOKEN_ICON_MAP: Record<string, string> = {
   Ethereum: 'eth.png',
@@ -43,21 +45,70 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   ZkSync: 'ZK',
 };
 
+/**
+ * 小数位映射，用来把原始整数（最小单位）转换为可读数量
+ * 根据实际 token 调整（常见：ETH/DAI/UNI/AAVE 18，USDT/USDC 6）
+ */
+const DECIMALS: Record<string, number> = {
+  Ethereum: 18,
+  USDT: 6,
+  USDC: 6,
+  DAI: 18,
+  UNI: 18,
+  AAVE: 18,
+  Sepolia: 18,
+  ZkSync: 18,
+};
+
 const getLocalLogoUrl = (token: string) => {
   const iconFile = TOKEN_ICON_MAP[token];
   if (iconFile) return `/tokens/${iconFile}`;
   return null;
 };
 
-
-
-export default function TokenCard({ address, network }: Props) {
+export default function TokenCard({ address, network, setTotalBalance }: Props) {
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [balances, setBalances] = useState<Record<string, string>>({});
   const selectedNetwork = (network || 'ethereum').toLowerCase();
 
   // determine which tokens to show based on parent-provided network
   const tokens = TOKEN_LIST[selectedNetwork] ?? TOKEN_LIST['ethereum'];
+
+  // helper: parse different balance string formats into a number of token units
+  const parseTokenBalance = (balStr: string | undefined, token: string): number => {
+    if (!balStr) return NaN;
+    const trimmed = String(balStr).replace(/,/g, '').trim();
+
+    if (trimmed === '读取失败' || trimmed === '未连接地址') return NaN;
+
+    // numeric with dot -> already human-readable token amount
+    if (/^[0-9]+(\.[0-9]+)?$/.test(trimmed)) {
+      return Number(trimmed);
+    }
+
+    // pure integer string (可能是最小单位，例如 wei / 6-decimals)
+    if (/^[0-9]+$/.test(trimmed)) {
+      const decimals = DECIMALS[token] ?? 18;
+      // 如果整数长度大于 decimals，通常表示这是最小单位整数，需要除以 10**decimals
+      if (trimmed.length > decimals) {
+        const intPart = trimmed.slice(0, trimmed.length - decimals) || '0';
+        let fracPart = trimmed.slice(trimmed.length - decimals).padStart(decimals, '0');
+        // 合成小数字符串（避免使用 BigInt -> Number 精度问题的极端情况，适合一般钱包余额）
+        // 去掉尾随零便于 Number 转换（但保留至少一位）
+        fracPart = fracPart.replace(/0+$/, '');
+        const asStr = fracPart ? `${intPart}.${fracPart}` : `${intPart}`;
+        const n = Number(asStr);
+        return Number.isFinite(n) ? n : NaN;
+      } else {
+        // 整数且长度不大：很可能就是人类可读数量（例如 "1"、"12"）
+        return Number(trimmed);
+      }
+    }
+
+    // fallback: try Number conversion
+    const n = Number(trimmed);
+    return Number.isFinite(n) ? n : NaN;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -94,14 +145,34 @@ export default function TokenCard({ address, network }: Props) {
         })
       );
 
-      if (!cancelled) setPrices(newPrices);
-      if (!cancelled) setBalances(newBalances);
+      if (!cancelled) {
+        setPrices(newPrices);
+        setBalances(newBalances);
+
+        // 计算 total balance（法币美元）
+        let total = 0;
+        tokens.forEach((t) => {
+          const price = newPrices[t];
+          const balStr = newBalances[t];
+          const numericBal = parseTokenBalance(balStr, t);
+
+          if (!Number.isFinite(price) || Number.isNaN(price)) return;
+          if (!Number.isFinite(numericBal) || Number.isNaN(numericBal)) return;
+
+          total += numericBal * price;
+        });
+
+        // 保留两位小数（可根据需要调整）
+        const roundedTotal = Math.round((total + Number.EPSILON) * 100) / 100;
+        setTotalBalance(roundedTotal);
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [address, selectedNetwork]);
+    // 加上 setTotalBalance（来自 props）以避免 lint 警告
+  }, [address, selectedNetwork, setTotalBalance, /* tokens derived from selectedNetwork */]);
 
   // small badge for testnets
   const isTestnet = selectedNetwork === 'sepolia';
@@ -166,7 +237,7 @@ export default function TokenCard({ address, network }: Props) {
 
                 <div className="leading-tight">
                   <div className="text-sm font-semibold text-sky-900 flex items-center gap-2">
-                    <span className="text-xs text-sky-500 px-1 py-0.5 bg-white/30 rounded">{symbol}</span>
+                    <span className="text-xs px-1 py-0.5 rounded">{symbol}</span>
                   </div>
                   <div className="text-xs text-sky-500 mt-0.5">
                     {typeof price === 'number' && !Number.isNaN(price) ? `$${price}` : '加载中...'}
