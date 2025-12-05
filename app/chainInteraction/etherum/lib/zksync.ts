@@ -8,6 +8,8 @@ import { getPrivateKey } from "@/app/walletManagement/lib/getPrivateKey";
 
 import { erc20Abi } from "viem";
 
+import { UserTxInput } from "@/app/chainInteraction/lib/transaction";
+
 const INFURA_API_KEY = process.env.NEXT_PUBLIC_INFURA_API_KEY;
 const ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || '';
 const CHAIN_ID = 324;
@@ -17,14 +19,7 @@ const BASE_URL =
   `chainid=${CHAIN_ID}&module=account&apikey=${ETHERSCAN_API_KEY}&contractaddress=${CONTRACT_ADDRESS}`;
 const PAYMASTER_URL = "https://api.zyfi.org/api/erc20_paymaster/v1";
 
-export interface UserTxInput {
-  to: `0x${string}`;           // 必填：收款地址
-  value: string;              // 必填：金额（string，前端输入框用）
-  data?: `0x${string}`;       // 可选：合约调用数据（默认不填） 
-  gasLimit?: string;          // 可选：gas limit（高级）
-  maxFeePerGas?: string;      // 可选：最大 gas 费用（高级）
-  maxPriorityFeePerGas?: string; // 可选：小费（高级）
-}
+
 
 export async function getZkSyncBalance(address: string) {  
     
@@ -68,7 +63,7 @@ export function createZkSyncPublicClient() {
   return publicClient;
 }
 
-export async function sendPaymasterTransaction(
+export async function sendZkSyncPaymasterTransaction(
   walletClient: WalletClient,
   userInput: UserTxInput
 ) {

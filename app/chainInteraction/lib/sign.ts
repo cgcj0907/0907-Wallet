@@ -2,16 +2,7 @@
 import { WalletClient } from "viem";
 
 ;
-
-interface UserTxInput {
-  to: `0x${string}`;
-  value: string;
-  data?: `0x${string}`;
-  gasLimit?: string;
-  maxFeePerGas?: string;
-  maxPriorityFeePerGas?: string;
-}
-
+import { UserTxInput } from "@/app/chainInteraction/lib/transaction";
 
 /**
  * 本地签名交易（不发送，只返回序列化后的 rawTx）

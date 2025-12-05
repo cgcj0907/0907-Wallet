@@ -22,14 +22,14 @@ const GET_BALANCE: Record<
   usdc: getUSDCBalance,
 };
 
-export async function getBalance(address: string, network: string = "ethereum") {
-    network = network.toLowerCase();
-    if (ERC20_TOKEN.includes(network)) {
-        const get_balance = GET_BALANCE[network];
+export async function getBalance(address: string, token: string = "ethereum") {
+    token = token.toLowerCase();
+    if (ERC20_TOKEN.includes(token)) {
+        const get_balance = GET_BALANCE[token];
         const data = await get_balance(address);
         return ethers.formatEther(data);
     } else {
-    const client = getPublicClient(network);
+    const client = getPublicClient(token);
     const balance = await client.getBalance({address});
     return ethers.formatEther(balance);
     }

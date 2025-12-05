@@ -1,18 +1,23 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { WalletClient, parseEther } from "viem";
-import { getWalletClient } from "@/app/chainInteraction/lib/client";
+import React, { useState, useEffect } from "react";
+import { parseEther } from "viem";
 import { sendTransactions, UserTxInput } from "@/app/chainInteraction/lib/transaction";
-import QrScanner from 'qr-scanner'; // 你要求的引入方式
+import Avatar from 'boring-avatars';
+import QRScanner from "./QRScanner";
+import SelectToken from "./SelectToken";
+import { NetworkNotice, Layer2Info, EthereumInfo, DataNotice } from "./TransferNotice";
+import {
+  ERC20TOKEN_LIST,
+  NATIVE_TOKEN
+} from '@/app/networkManagement/lib/details'
 
-const LAYER2_LIST: string[] = ['zksync'];
-
-export default function Transfer({ setSentTransactionOpen
-
-}: {
-  setSentTransactionOpen: (open: boolean) => void;
-}) {
+type props = {
+  setSentTransactionOpen: (open: boolean) => void,
+  address: string | undefined
+  network: string | null
+}
+export default function Transfer({ setSentTransactionOpen,address, network }: props) {
   const [form, setForm] = useState<UserTxInput & { password: string }>({
     to: "" as `0x${string}`,
     value: "",
@@ -23,13 +28,12 @@ export default function Transfer({ setSentTransactionOpen
     password: "",
   });
 
-  const [network, setNetwork] = useState<string>("arbitrum_sepolia");
   const [keyPath, setKeyPath] = useState<string>("");
+  const [token, setToken] = useState<string>();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showAdvancedInfo, setShowAdvancedInfo] = useState(false);
-
-  // 新增：Layer2 提示开关
   const [showLayer2Info, setShowLayer2Info] = useState(false);
+  const [showEthereumInfo, setShowEthereumInfo] = useState(false);
 
   // 建议值（保底）
   const suggestedMaxFeeGwei = "2";
@@ -40,19 +44,13 @@ export default function Transfer({ setSentTransactionOpen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 扫码相关
-  const [scanOpen, setScanOpen] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const scannerRef = useRef<any>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
+  const availableTokens = ERC20TOKEN_LIST[network!] ?? [];
 
   useEffect(() => {
     const storedKeyPath = localStorage.getItem("currentAddressKeyPath");
     const storedNetwork = localStorage.getItem("currentNetwork");
 
     if (storedKeyPath) setKeyPath(storedKeyPath);
-    if (storedNetwork) setNetwork(storedNetwork);
   }, []);
 
   useEffect(() => {
@@ -83,126 +81,8 @@ export default function Transfer({ setSentTransactionOpen
         return next;
       });
     }
-
   }, [showAdvanced]);
 
-  const startScanner = async () => {
-    setScanError(null);
-    try {
-      if (!videoRef.current) throw new Error("video element missing");
-
-      // 清理旧的 scanner
-      if (scannerRef.current) {
-        try { scannerRef.current.stop(); } catch { }
-        try { scannerRef.current.destroy?.(); } catch { }
-        scannerRef.current = null;
-      }
-
-      const scanner = new QrScanner(
-        videoRef.current,
-        (result) => {
-          const text = result.data ?? result; // 兼容详细模式和字符串模式
-          console.log("decoded:", text);
-
-          // 匹配 ethereum 地址
-          const m = text.match(/0x[a-fA-F0-9]{40}/);
-          if (m) {
-            const address = m[0] as `0x${string}`;
-
-            // 写入表单
-            setForm(prev => ({ ...prev, to: address }));
-
-            // 关闭扫码弹窗
-            setScanOpen(false);
-
-            // 停止扫描，避免重复触发
-            scanner.stop();
-          }
-        },
-        {
-          returnDetailedScanResult: true,
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-        }
-      );
-
-      scannerRef.current = scanner;
-      await scanner.start();
-    } catch (err: any) {
-      console.error("startScanner error:", err);
-      setScanError("无法打开相机或浏览器不支持相机访问。请允许相机权限或使用图片上传。");
-    }
-  };
-
-
-  const stopScanner = () => {
-    try {
-      if (scannerRef.current) {
-        scannerRef.current.stop();
-        scannerRef.current.destroy?.();
-        scannerRef.current = null;
-      }
-    } catch (e) {
-      console.warn("stopScanner error:", e);
-    }
-  };
-
-  const openScanModal = () => {
-    setScanOpen(true);
-    setTimeout(() => startScanner(), 60);
-  };
-
-  const closeScanModal = () => {
-    stopScanner();
-    setScanOpen(false);
-    setScanError(null);
-  };
-
-  const handleFileScan = async (file?: File) => {
-    setScanError(null);
-    if (!file) return;
-
-    try {
-      // 关键：第二个参数传入 { returnDetailedScanResult: true }
-      const result = await QrScanner.scanImage(file, {
-        returnDetailedScanResult: true,
-      });
-
-      // result 现在是一个对象 { data: string, cornerPoints: ... }
-      // 所以要用 result.data 取内容
-      const content = result.data;
-
-      if (!content) {
-        setScanError("未能识别图片中的二维码，请更换图片或使用相机扫码。");
-        return;
-      }
-
-      // 自动提取以太坊地址
-      const match = content.match(/0x[a-fA-F0-9]{40}/i);
-      const address = match ? match[0] : content.trim();
-
-      setForm(prev => ({ ...prev, to: address as `0x${string}` }));
-      closeScanModal();
-    } catch (err: any) {
-      console.error("handleFileScan error:", err);
-      setScanError("图片识别失败，请确保是二维码图片。");
-    }
-  };
-
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) handleFileScan(f);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  useEffect(() => {
-    return () => {
-      stopScanner();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ========== 表单提交（保持你原逻辑） ==========
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -221,8 +101,6 @@ export default function Transfer({ setSentTransactionOpen
         if (form.maxFeePerGas && !isValidNumber(form.maxFeePerGas)) throw new Error("Max Fee Per Gas 必须是有效的数字");
         if (form.maxPriorityFeePerGas && !isValidNumber(form.maxPriorityFeePerGas)) throw new Error("Max Priority Fee Per Gas 必须是有效的数字");
       }
-
-      const walletClient: WalletClient = await getWalletClient(network, keyPath, form.password);
 
       const gweiToWeiString = (gweiStr?: string) => {
         if (!gweiStr || gweiStr.trim() === "") return undefined;
@@ -252,7 +130,24 @@ export default function Transfer({ setSentTransactionOpen
         }
       }
 
-      const hash = await sendTransactions(network, walletClient, userInput);
+      const hash = await sendTransactions(network!, keyPath, form.password, userInput, token);
+      const storeKey = `pending_hashes_${network}_${address}`
+      if (hash) {
+        // 1. 先读 localStorage
+        const saved = localStorage.getItem(storeKey);
+        let pending: string[] = [];
+
+        try {
+          pending = saved ? JSON.parse(saved) : [];
+        } catch {
+          pending = [];
+        }
+
+        // 2. 加进去（去重）
+        const updated = [...new Set([...pending, hash])];
+        // 3. 写回 localStorage
+        localStorage.setItem(storeKey, JSON.stringify(updated));
+      }
       setTxHash(hash);
 
     } catch (err: any) {
@@ -274,12 +169,14 @@ export default function Transfer({ setSentTransactionOpen
         }
       }
       setError(errorMessage);
+      setTimeout(() => {
+        setError(null)
+      }, 3000);
     } finally {
       setLoading(false);
     }
   };
 
-  // ========== UI ==========
   return (
     <>
       <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50 p-4">
@@ -303,43 +200,32 @@ export default function Transfer({ setSentTransactionOpen
               <div className="flex items-center gap-2 bg-sky-50 rounded-lg p-3 border border-sky-100">
                 <i className="fa-solid fa-globe"></i>
                 <div className="text-sky-800 font-medium">{network || "未设置"}</div>
-                {/* 新增：Layer2 提示按钮（靠右） */}
-                {LAYER2_LIST.includes(network) &&
-                  <button
-                    type="button"
-                    onClick={() => setShowLayer2Info(v => !v)}
-                    className="ml-auto shrink-0 flex items-center gap-2 px-3 py-1 rounded-lg border border-sky-100 bg-white hover:bg-sky-50 text-sky-700 text-sm"
-                    title="Layer2 代币转账需知"
-                    aria-expanded={showLayer2Info}
-                  >
-                    <i className="fa-solid fa-circle-exclamation"></i>
-                    Layer2 代币转账需知
-                  </button>
-                }
+                <NetworkNotice
+                  network={network!}
+                  setShowLayer2Info={setShowLayer2Info}
+                  setShowEthereumInfo={setShowEthereumInfo}
+                />
               </div>
+              {/* 主网说明面板 */}
+              <EthereumInfo showEthereumInfo={showEthereumInfo} />
+              {/* Layer2 说明面板 */}
+              <Layer2Info showLayer2Info={showLayer2Info} />
 
-              {/* 新增：Layer2 说明面板 */}
-              <div
-                className={`mt-2 px-4 py-3 rounded-lg border border-sky-100 bg-sky-50 text-sky-700 text-sm transition-all overflow-hidden ${showLayer2Info ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
-                style={{ transitionProperty: 'max-height, opacity', transitionDuration: '220ms' }}
-                aria-hidden={!showLayer2Info}
-              >
-                <strong className="block mb-2">Layer2 代币转账需知</strong>
-                <p className="text-xs mb-2">
-                  在某些 Layer2 网络上，代币转账会采用 gasless / paymaster 赞助的机制；一次“用户体验上的单笔转账”背后可能对应多笔链上操作，常见流程示例如下：
-                </p>
-                <ol className="list-decimal pl-5 space-y-1 text-xs">
-                  <li><span className="font-medium">Paymaster 预支手续费：</span>Paymaster（赞助方）先行为该次操作预支或抵押所需的手续费。</li>
-                  <li><span className="font-medium">用户转账给目的账户：</span>实际的代币从用户地址转入目标地址（这步是用户意图的转账）。</li>
-                  <li><span className="font-medium">用户支付手续费给 Paymaster：</span>随后由链上或协议内的结算把手续费回补给 Paymaster（可能在同一笔或另外的交易中完成）。</li>
-                </ol>
-                <p className="text-xs mt-2 text-sky-600">
-                  注意：不同 Layer2 / Paymaster 实现细节不同（是否收费、是否需要额外授权、是否产生额外事件等），请以链上合约或钱包文档为准。
-                </p>
-              </div>
+
             </div>
 
+
+            {/* 表单字段 */}
             <div className="space-y-4">
+              {/* 代币选择器 */}
+              <SelectToken
+                network={network!}
+                availableTokens={availableTokens}
+                token={token}
+                setToken={setToken}
+                address={address}
+              />
+
               <div>
                 <label className="text-sm font-medium text-sky-700 block mb-2">
                   钱包密码
@@ -362,7 +248,15 @@ export default function Transfer({ setSentTransactionOpen
                   <span className="text-red-500 ml-1">*</span>
                 </label>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  {form.to &&
+                    <Avatar
+                      name={form.to}
+                      size={36}
+                      variant="beam"
+                      colors={["#FFFFFF", "#E3F2FD", "#90CAF9", "#42A5F5", "#1E88E5"]}
+                    />
+                  }
                   <input
                     name="to"
                     value={form.to}
@@ -371,14 +265,7 @@ export default function Transfer({ setSentTransactionOpen
                     placeholder="0x..."
                     className="flex-1 px-4 py-3 rounded-lg border border-sky-100 focus:ring-2 focus:ring-sky-200 focus:border-transparent transition-all outline-none font-mono text-sm bg-white"
                   />
-                  <button
-                    type="button"
-                    onClick={openScanModal}
-                    className="shrink-0 px-3 py-2 rounded-lg border border-sky-100 bg-white hover:bg-sky-50 text-sky-700"
-                    title="扫码填入地址"
-                  >
-                    <i className="fa-solid fa-qrcode"></i>
-                  </button>
+                  <QRScanner setForm={setForm} />
                 </div>
 
                 {form.to && !isValidEthereumAddress(form.to) && (
@@ -388,7 +275,7 @@ export default function Transfer({ setSentTransactionOpen
 
               <div>
                 <label className="text-sm font-medium text-sky-700 block mb-2">
-                  转账金额 (ETH)
+                  转账金额 ({token ? token.toUpperCase() : NATIVE_TOKEN[network!]})
                   <span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
@@ -405,7 +292,7 @@ export default function Transfer({ setSentTransactionOpen
               </div>
             </div>
 
-            {/* Advanced Options */}
+            {/* 高级选项 */}
             <div className="border-t border-sky-100 pt-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -429,16 +316,7 @@ export default function Transfer({ setSentTransactionOpen
                 </div>
               </div>
 
-              <div
-                className={`mt-1 rounded-lg border border-sky-100 bg-sky-50 text-sky-700 text-sm transition-all overflow-hidden ${showAdvancedInfo ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
-                style={{ transitionProperty: 'max-height, opacity', transitionDuration: '250ms' }}
-              >
-                <ul className="list-disc pl-4 space-y-1">
-                  <li><span className="font-medium">Gas Limit</span>: 交易计算的 gas 上限，通常为 21000</li>
-                  <li><span className="font-medium">Max Fee (Gwei)</span>: 每单位 gas 的最高费用（包含基础费用和优先费用）</li>
-                  <li><span className="font-medium">Max Priority Fee (Gwei)</span>: 支付给验证者的优先费用，影响交易打包速度</li>
-                </ul>
-              </div>
+              <DataNotice showAdvancedInfo={showAdvancedInfo} />
 
               {showAdvanced && (
                 <div className="mt-3 space-y-4">
@@ -546,68 +424,6 @@ export default function Transfer({ setSentTransactionOpen
           )}
         </div>
       </div>
-
-      {/* 扫码 Modal */}
-      {scanOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-white">
-          <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border  border-gray-200/50">
-            {/* 标题和关闭按钮 */}
-            <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">扫码填入地址</h3>
-                <p className="text-sm text-gray-500 mt-1">对准二维码自动识别</p>
-              </div>
-              <button
-                onClick={closeScanModal}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-                aria-label="关闭"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* 扫码区域 */}
-            <div className="p-6 flex flex-col items-center">
-              <div className="relative w-72 h-72 border-2 border-blue-400 rounded-lg flex items-center justify-center">
-                <video
-                  ref={videoRef}
-                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                  muted
-                />
-                {/* 四角装饰 */}
-                <div className="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 border-blue-500 rounded-tl-lg"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 border-t-2 border-r-2 border-blue-500 rounded-tr-lg"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-2 border-l-2 border-blue-500 rounded-bl-lg"></div>
-                <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-blue-500 rounded-br-lg"></div>
-              </div>
-
-              {/* 操作按钮 */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 transition-all shadow-lg active:scale-95"
-                >
-                  上传二维码图片
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-              </div>
-
-              {/* 提示信息 */}
-              {scanError && (
-                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-red-500 bg-red-50 py-2 rounded-lg w-full">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{scanError}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
     </>
   );
 }

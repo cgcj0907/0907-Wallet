@@ -23,7 +23,6 @@ export async function getPrice(network: string , tokenName: string) {
     
     const address = PRICE_FEEDS[tokenName];
     if (!address) {
-        console.log(PRICE_FEEDS[tokenName] , tokenName)
         throw new Error(`Unsupported network: ${network}`);
     }
     const abi = parseAbi(['function latestRoundData() view returns (uint80, int256, uint256, uint256, uint80)']);

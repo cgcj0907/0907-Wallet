@@ -56,7 +56,6 @@ export default function AccountPanel({
         const keyPath = localStorage.getItem('currentAddressKeyPath');
         if (keyPath !== null) {
             await modifyAddressName(keyPath, nameInput); // 调用你的修改函数
-            console.log(nameInput + "success");
         }
 
         addressRecord.name = nameInput; // 本地立即更新显示

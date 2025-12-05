@@ -1,64 +1,22 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as Web3Icons from '@web3icons/react';
 import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getPrice } from '@/app/chainInteraction/lib/priceFeed';
+import {
+  TOKEN_LIST,
+  TOKEN_ICON_MAP,
+  DECIMALS,
+  TOKEN_SYMBOL_MAP
+} from '@/app/networkManagement/lib/details'
 
-type Props = { 
-  address?: string; 
-  network: string | null; 
-  setTotalBalance: (value: number) => void; 
+type Props = {
+  address?: string;
+  network: string | null;
+  setTotalBalance: (value: number) => void;
 };
 
-const TOKEN_LIST: Record<string, string[]> = {
-  ethereum: ['Ethereum', 'USDT', 'USDC', 'DAI', 'UNI', 'AAVE' ],
-  sepolia: ['Sepolia'],
-  zksync: ['ZkSync'],
-};
-
-/**
- * 本地图标映射：
- */
-const TOKEN_ICON_MAP: Record<string, string> = {
-  Ethereum: 'eth.png',
-  USDT: 'usdt.svg',
-  USDC: 'usdc.svg',
-  DAI: 'dai.svg',
-  UNI: 'uni.svg',
-  AAVE: 'aave.svg',
-  Sepolia: 'eth.png',
-  ZkSync: 'zk.png',
-};
-
-/**
- * 展示用简称（symbol）
- */
-const TOKEN_SYMBOL_MAP: Record<string, string> = {
-  Ethereum: 'ETH',
-  USDT: 'USDT',
-  USDC: 'USDC',
-  DAI: 'DAI',
-  UNI: 'UNI',
-  AAVE: 'AAVE',
-  Sepolia: 'SepoliaETH',
-  ZkSync: 'ZK',
-};
-
-/**
- * 小数位映射，用来把原始整数（最小单位）转换为可读数量
- * 根据实际 token 调整（常见：ETH/DAI/UNI/AAVE 18，USDT/USDC 6）
- */
-const DECIMALS: Record<string, number> = {
-  Ethereum: 18,
-  USDT: 6,
-  USDC: 6,
-  DAI: 18,
-  UNI: 18,
-  AAVE: 18,
-  Sepolia: 18,
-  ZkSync: 18,
-};
 
 const getLocalLogoUrl = (token: string) => {
   const iconFile = TOKEN_ICON_MAP[token];
@@ -187,7 +145,7 @@ export default function TokenCard({ address, network, setTotalBalance }: Props) 
       try {
         return <IconComp variant="branded" size={28} />;
       } catch (e) {
-       
+
       }
     }
 
@@ -201,7 +159,7 @@ export default function TokenCard({ address, network, setTotalBalance }: Props) 
           onError={(e) => {
             const img = e.currentTarget as HTMLImageElement;
             img.onerror = null;
-            
+
           }}
         />
       );

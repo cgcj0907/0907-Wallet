@@ -4,10 +4,15 @@ import { useEffect, useState } from 'react';
 import { getBalance } from '@/app/chainInteraction/lib/account';
 import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 
-import  Transfer  from './smallComponents/Transfer';
-import  Receive from './smallComponents/Receive';
+import Transfer from './mainCard/transfer/Transfer';
+import Receive from './mainCard/receive/Receive';
 
-type props = { address: string | undefined, network: string | null, totalBalance: number }
+
+type props = { 
+    address: string | undefined, 
+    network: string | null, 
+    totalBalance: number
+}
 
 export default function MainCard({ address, network, totalBalance }: props) {
     const [balance, setBalance] = useState<string>('0.0');
@@ -37,7 +42,7 @@ export default function MainCard({ address, network, totalBalance }: props) {
             }
         })();
 
-    }, [network, address]); // 依赖 network 或 address 改变时重新获取
+    }, [network, address]); 
 
     return (
 
@@ -66,7 +71,12 @@ export default function MainCard({ address, network, totalBalance }: props) {
                     <i className="fa-regular fa-paper-plane fa-beat"></i>
                     <span>发送</span>
                 </button>
-                {sendTransactionOpen && <Transfer setSentTransactionOpen={setSendTransactionOpen}/>}
+                {sendTransactionOpen &&
+                    <Transfer
+                        setSentTransactionOpen={setSendTransactionOpen}
+                        address={address}
+                        network={network}
+                    />}
                 <button
                     onClick={() => setReceiveOpen(true)}
                     className="w-full rounded-xl py-3 bg-white border border-sky-200 text-sky-700 font-medium hover:bg-sky-50 transition flex items-center justify-center gap-2"
@@ -74,7 +84,7 @@ export default function MainCard({ address, network, totalBalance }: props) {
                     <i className="fa-solid fa-qrcode"></i>
                     <span>接受</span>
                 </button>
-                {receiveOpen && <Receive address={address} setReceiveOpen={setReceiveOpen}/>}
+                {receiveOpen && <Receive address={address} setReceiveOpen={setReceiveOpen} />}
             </div>
         </div>)
 

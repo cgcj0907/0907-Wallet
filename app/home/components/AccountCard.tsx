@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { AddressRecord } from '@/app/walletManagement/lib/saveAddress';
-import AccountPanel from './smallComponents/AccountPanel'
+import AccountPanel from './accountCard/AccountPanel'
 import Avatar from 'boring-avatars';
 
 export default function AccountCard(
