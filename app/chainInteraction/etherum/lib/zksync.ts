@@ -48,7 +48,6 @@ export async function createZkSyncWalletClient(
   return createWalletClient({
     account,
     transport: http(
-      // `https://zksync-mainnet.infura.io/v3/${INFURA_API_KEY}`
       "https://mainnet.era.zksync.io"
     ),
   }).extend(eip712WalletActions());

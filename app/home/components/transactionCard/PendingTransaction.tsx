@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import Avatar from 'boring-avatars';
 import { CHAIN_ID, EXPLORER_MAP } from '@/app/networkManagement/lib/details';
 
-const ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY ?? '';
+const ETHERSPOT_API_KEY = process.env.NEXT_PUBLIC_ETHERSPOT_API_KEY;
 const CHECK_TX_STATUS_URL =
-    `https://api.etherscan.io/v2/api?module=transaction&action=gettxreceiptstatus&apikey=${ETHERSCAN_API_KEY}`;
+    `https://rpc.etherspot.io/v3/1?api-key=${ETHERSPOT_API_KEY}`;
 
 type Props = {
     address: string | undefined;
@@ -43,7 +43,18 @@ export default function PendingTransaction({ address, network }: Props) {
 
             for (const hash of hashes) {
                 try {
-                    const res = await fetch(`${CHECK_TX_STATUS_URL}&chainid=${CHAIN_ID[network!]}&txhash=${hash}`);
+                    const res = await fetch(CHECK_TX_STATUS_URL, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            id: CHAIN_ID[network],
+                            method: "eth_getUserOperationByHash",
+                            params: [hash],
+                        }),
+                    });
+
                     if (!res.ok) {
                         // 请求失败则视为未确认，保留
                         remaining.push(hash);
@@ -53,6 +64,7 @@ export default function PendingTransaction({ address, network }: Props) {
                     let json: any = null;
                     try {
                         json = await res.json();
+                        console.log(json)
                     } catch (e) {
                         console.warn('failed parse etherscan response for', hash, e);
                         // 无法解析则保留
@@ -64,7 +76,7 @@ export default function PendingTransaction({ address, network }: Props) {
                     // 同时兼容部分情况把 status 放在顶层的格式
                     let isConfirmed = false;
                     if (json) {
-                        if (json.result && (json.result.status === '1' || json.result.status === 1)) {
+                        if (json.result) {
                             isConfirmed = true;
                         } else if (json.status === '1' || json.status === 1) {
                             isConfirmed = true;

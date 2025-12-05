@@ -28,6 +28,10 @@ export async function getEthereumTransactions(address: string) {
   return fetch(`${BASE_URL}&action=txlist&address=${address}&page=1000`);
 }
 
+export async function getEthereumERC20Transactions(address: string, contract: string) {
+  return fetch(`${BASE_URL}&action=tokentx&address=${address}&contractaddress=${contract}&page=1000`);
+}
+
 export async function createEthereumWalletClient(
   keyPath: string,
   password: string

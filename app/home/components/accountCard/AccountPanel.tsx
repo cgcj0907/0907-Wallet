@@ -1,10 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
-import Avatar from 'boring-avatars';
 import SwitchAccount from './SwitchAccount';
 import { useRouter } from 'next/navigation';
-import { AddressRecord, modifyAddressName } from '@/app/walletManagement/lib/saveAddress';
+import { AddressRecord, modifyAddressName, getAddress } from '@/app/walletManagement/lib/saveAddress';
 
 /* 打开区块链浏览器 */
 const openExplorer = async (addr?: string) => {
@@ -33,14 +32,10 @@ export default function AccountPanel({
     accountPanelOpen: boolean,
     setAccountPanelOpen: (value: boolean) => void,
     setAddressRecord: (addressRecord: AddressRecord) => void
-
 }) {
-
     const [copied, setCopied] = useState(false);
-    const [switchAccountOpen, setSwitchAccountOpen] = useState(false);
     const [editingName, setEditingName] = useState(false);
     const [nameInput, setNameInput] = useState(addressRecord.name);
-
     const router = useRouter();
 
     const handleCopy = async () => {
@@ -55,10 +50,10 @@ export default function AccountPanel({
         if (!addressRecord) return;
         const keyPath = localStorage.getItem('currentAddressKeyPath');
         if (keyPath !== null) {
-            await modifyAddressName(keyPath, nameInput); // 调用你的修改函数
+            await modifyAddressName(keyPath, nameInput);
         }
 
-        addressRecord.name = nameInput; // 本地立即更新显示
+        addressRecord.name = nameInput;
         setEditingName(false);
     };
 
@@ -66,30 +61,37 @@ export default function AccountPanel({
         <>
             {accountPanelOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-                    <div className="w-full max-w-sm bg-white rounded-2xl p-5 border border-sky-200 shadow-lg">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <Avatar
-                                    name={addressRecord.address}
-                                    size={48}
-                                    variant="beam"
-                                    colors={["#FFFFFF", "#E3F2FD", "#90CAF9", "#42A5F5", "#1E88E5"]}
-                                />
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        {editingName ? (
-                                            <input
-                                                value={nameInput}
-                                                onChange={(e) => setNameInput(e.target.value)}
-                                                className="border-b border-sky-400 text-lg font-semibold text-sky-800 focus:outline-none w-28"
-                                                onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                                            />
-                                        ) : (
-                                            <span className="text-lg font-semibold text-sky-800">{addressRecord.name}</span>
-                                        )}
+                    <div className="w-full max-w-sm bg-white rounded-2xl p-5 border border-sky-100 shadow-lg shadow-sky-100/30">
+                        {/* 头像和账户选择区域 */}
+                        <div className="flex flex-col items-center">
+                            {/* 账户选择器和名称编辑区域 */}
+                            <div className="w-full mb-2">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex">
+                                        <div className="flex">
+                                            {editingName ? (
+                                                <div className="relative flex pl-2 items-center justify-center gap-3 text-center">
+                                                    <i className="fa-regular fa-user"></i>
+                                                    <input
+                                                        value={nameInput}
+                                                        onChange={(e) => setNameInput(e.target.value)}
+                                                        className="w-30 border-b-2 border-sky-500 bg-transparent py-1 px-1 text-lg font-semibold text-sky-800 focus:outline-none focus:ring-0"
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+                                                        autoFocus
+                                                    />
+                                                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-sky-400 to-blue-400 transform scale-x-0 transition-transform duration-300 group-focus-within:scale-x-100"></div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex pl-2 items-center justify-center gap-3 text-center">
+                                                    <i className="fa-regular fa-user"></i>
+                                                    <h2 className="text-xl font-bold text-sky-800">{addressRecord.name}</h2>
+
+                                                </div>
+                                            )}
+                                        </div>
 
                                         <button
-                                            className="text-xs text-sky-600 px-1 py-0.5 rounded"
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all }`}
                                             onClick={() => {
                                                 if (editingName) {
                                                     handleSaveName();
@@ -98,63 +100,78 @@ export default function AccountPanel({
                                                 }
                                             }}
                                         >
-                                            {editingName ? <i className="fa-solid fa-check"></i> : <i className="fa-regular fa-pen-to-square"></i>}
+                                            {editingName ? (
+                                                <i className="fa-solid fa-check text-sm"></i>
+                                            ) : (
+                                                <i className="fa-regular fa-pen-to-square text-sm"></i>
+                                            )}
                                         </button>
                                     </div>
-
+                                    {/* 顶部关闭按钮 */}
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => setAccountPanelOpen(false)}
+                                            className="w-8 h-8 rounded-full text-sky-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                        >
+                                            <i className="fa-solid fa-xmark text-lg"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
+                                {/* 账户选择器 */}
+                                <div className="relative">
+                                    <SwitchAccount
+                                        setAddressRecord={setAddressRecord}
+                                        defaultAddressKey={localStorage.getItem('currentAddressKeyPath')}
+                                    />
+                                </div>
                             </div>
-                            <button
-                                onClick={() => setAccountPanelOpen(false)}
-                                className="text-sky-600 text-sm"
-                            >
-                               <i className="fa-regular fa-rectangle-xmark fa-2xl"></i>
-                            </button>
                         </div>
 
-                        <div className="bg-sky-50 p-1 rounded-lg border border-sky-100 mb-4">
-                            <i className="fa-solid fa-address-card" style={{color: "#74C0FC"}}></i>
-                            <div className="text-sm font-mono text-sky-800 mt-2">{addressRecord.address}</div>
+                        {/* 地址显示区域 */}
+                        <div className="bg-sky-50/50 rounded-xl p-4 mb-2 border border-sky-100">
+                            <div className="flex items-start gap-2 mb-2">
+                                <i className="fa-solid fa-address-card text-sky-400 mt-0.5"></i>
+                                <span className="text-xs font-medium text-sky-600">钱包地址</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                                <code className="text-sm font-mono text-sky-800 break-all">
+                                    {addressRecord.address}
+                                </code>
+                                <button
+                                    onClick={handleCopy}
+                                    className="shrink-0 ml-2 text-sky-500 hover:text-sky-700 transition-colors"
+                                    title="复制地址"
+                                >
+                                    {copied ? (
+                                        <i className="fa-solid fa-check text-emerald-500"></i>
+                                    ) : (
+                                        <i className="fa-regular fa-copy"></i>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
+                        {/* 操作按钮区域 */}
                         <div className="grid grid-cols-2 gap-3">
                             <button
-                                onClick={handleCopy}
-                                className="py-3 px-4 rounded-lg bg-white border border-sky-200 text-sky-700 flex items-center justify-center gap-2"
-                            >
-                                {copied ? (
-                                    <i className="fa-solid fa-check"></i>
-                                ) : (
-                                    <i className="fa-regular fa-copy"></i>
-                                )}
-                                <span>{copied ? "已复制" : "复制"}</span>
-                            </button>
-
-                            <button
                                 onClick={() => openExplorer(addressRecord.address)}
-                                className="py-3 px-4 rounded-lg bg-white border border-sky-200 text-sky-700 flex items-center justify-center gap-2"
+                                className="py-3 px-4 rounded-xl bg-white border border-sky-200 text-sky-700 flex items-center justify-center gap-2 hover:bg-sky-50 hover:border-sky-300 transition-all group"
                             >
-                                <i className="fa-brands fa-internet-explorer fa-beat"></i>
-                                <span>在浏览器查看</span>
+                                <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                                    <i className="fa-solid fa-globe text-sky-500"></i>
+                                </div>
+                                <span className="text-sm font-medium">区块浏览器</span>
                             </button>
-
-                            <button
-                                onClick={() => setSwitchAccountOpen(true)}
-                                className="py-3 px-4 rounded-lg bg-white border border-sky-200 text-sky-700 flex items-center justify-center gap-2"
-                            >
-                                <i className="fa-solid fa-repeat"></i>
-                                <span>切换账户</span>
-                            </button>
-
-                            {switchAccountOpen && <SwitchAccount  setAddressRecord={setAddressRecord} setSwitchAccountOpen={setSwitchAccountOpen} />}
 
                             <button
                                 onClick={() => router.replace('/walletManagement')}
-                                className="py-3 px-4 rounded-lg bg-white border border-sky-200 text-sky-700 flex items-center justify-center gap-2"
+                                className="py-3 px-4 rounded-xl bg-white border border-sky-200 text-sky-700 flex items-center justify-center gap-2 hover:bg-sky-50 hover:border-sky-300 transition-all group"
                             >
-                                <i className="fa-solid fa-plus"></i>
-                                <span>生成/导入钱包</span>
+                                <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                                    <i className="fa-solid fa-wallet text-sky-500"></i>
+                                </div>
+                                <span className="text-sm font-medium">管理钱包</span>
                             </button>
                         </div>
                     </div>

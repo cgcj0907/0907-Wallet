@@ -1,8 +1,10 @@
-import { createEthereumPublicClient } from "./mainnet";
+import { 
+    createEthereumPublicClient, 
+    createEthereumBundlerClient, 
+    getEthereumERC20Transactions 
+} from "./mainnet";
 
 import { erc20Abi } from "viem";
-
-import { createEthereumBundlerClient } from "./mainnet";
 
 import { UserTxInput } from "@/app/chainInteraction/lib/transaction";
 
@@ -47,5 +49,8 @@ export async function sendUNIPaymasterTransaction(
 }
 
 
+export async function getUNITransactions(address: string) {
+    return await getEthereumERC20Transactions(address, CONTRACT_ADDRESS);
+}
 
 

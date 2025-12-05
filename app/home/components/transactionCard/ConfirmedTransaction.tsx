@@ -58,9 +58,10 @@ interface TransactionRaw {
 type props = {
     address: string | undefined,
     network: string | null,
+    token: string | null
 }
 
-export default function ConfirmedTransaction({ address, network }: props) {
+export default function ConfirmedTransaction({ address, network, token }: props) {
     const [transactions, setTransactions] = useState<TransactionRaw[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -73,7 +74,11 @@ export default function ConfirmedTransaction({ address, network }: props) {
             setLoading(true);
             try {
                 if (address) {
-                    const txs = await getTransactions(address, network ? network : 'ethereum');
+                    if ( ! token ) {
+                        return;
+                    }
+                    token = token?.toLowerCase();
+                    const txs = await getTransactions(address, token);
                     setTransactions(txs || []);
                 } else {
                     setTransactions([]);
@@ -86,12 +91,16 @@ export default function ConfirmedTransaction({ address, network }: props) {
             }
         }
         fetchTransactions();
-    }, [address, network]);
+    }, [address, network, token]);
 
 
     if (loading) return <div className="p-4">Loading...</div>;
     if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
+    
+    if ( ! transactions ) {
+        return;
+    }
     // 先排序，再决定显示多少条（默认显示 3 条）
     const sortedTxs = transactions
         .slice()

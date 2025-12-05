@@ -1,13 +1,18 @@
 
-import { createEthereumPublicClient } from "./mainnet";
+import { 
+    createEthereumPublicClient, 
+    createEthereumBundlerClient, 
+    getEthereumERC20Transactions 
+} from "./mainnet";
 
 import { erc20Abi } from "viem";
 
-import { createEthereumBundlerClient } from "./mainnet";
+
 
 import { UserTxInput } from "@/app/chainInteraction/lib/transaction";
 
 const CONTRACT_ADDRESS = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+
 
 export async function getUSDTBalance(address: string) {
 
@@ -42,6 +47,10 @@ export async function sendUSDTPaymasterTransaction(
         authorization: authorization,
     });
     return hash;
+}
+
+export async function getUSDTTransactions(address: string) {
+    return await getEthereumERC20Transactions(address, CONTRACT_ADDRESS);
 }
 
 

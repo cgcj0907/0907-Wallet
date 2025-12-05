@@ -6,6 +6,11 @@ import { getWalletClient } from './client';
 import { getEthereumTransactions } from "../etherum/lib/mainnet";
 import { getZkSyncTransactions } from "../etherum/lib/zksync";
 import { getSepoliaTransactions } from "../etherum/lib/sepolia";
+import { getUSDTTransactions } from '../etherum/lib/USDT';
+import { getUSDCTransactions } from '../etherum/lib/USDC';
+import { getDAITransactions } from '../etherum/lib/dai';
+import { getAAVETransactions } from '../etherum/lib/aave';
+import { getUNITransactions } from '../etherum/lib/uni';
 
 import { sendZkSyncPaymasterTransaction } from '../etherum/lib/zksync'
 import { sendUSDTPaymasterTransaction } from '../etherum/lib/USDT';
@@ -13,6 +18,7 @@ import { sendUSDCPaymasterTransaction } from '../etherum/lib/USDC';
 import { sendAAVEPaymasterTransaction } from '../etherum/lib/aave';
 import { sendUNIPaymasterTransaction } from '../etherum/lib/uni';
 import { sendDAIPaymasterTransaction } from '../etherum/lib/dai';
+import { getUint } from 'ethers';
 
 export interface UserTxInput {
   to: `0x${string}`;           // 必填：收款地址
@@ -28,6 +34,11 @@ const TRANSACTIONS: Record<string, (address: string) => Promise<Response>> = {
   ethereum: getEthereumTransactions,
   zksync: getZkSyncTransactions,
   sepolia: getSepoliaTransactions,
+  usdt: getUSDTTransactions,
+  usdc: getUSDCTransactions,
+  aave: getAAVETransactions,
+  dai: getDAITransactions,
+  uni: getUNITransactions,
 };
 
 const ERC20_TRANSFER: Record<string, (keyPath: string,
@@ -46,9 +57,9 @@ const ERC20_TRANSFER: Record<string, (keyPath: string,
  * @param address 用户地址
  * @param network 网络名称
  */
-export async function getTransactions(address: string, network: string = "ethereum") {
-  const fetchFn = TRANSACTIONS[network];
-  if (!fetchFn) throw new Error(`Unsupported network: ${network}`);
+export async function getTransactions(address: string, token: string = "ethereum") {
+  const fetchFn = TRANSACTIONS[token];
+  if (!fetchFn) throw new Error(`Unsupported token: ${token}`);
 
   const response = await fetchFn(address); // fetch 返回 Response
   const data = await response.json();      // 解析 JSON
