@@ -64,7 +64,7 @@ export default function PendingTransaction({ address, network }: Props) {
                     let json: any = null;
                     try {
                         json = await res.json();
-                        console.log(json)
+                
                     } catch (e) {
                         console.warn('failed parse etherscan response for', hash, e);
                         // 无法解析则保留

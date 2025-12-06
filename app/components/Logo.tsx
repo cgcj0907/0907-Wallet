@@ -23,7 +23,7 @@ export default function Logo() {
     return (
         // 外层容器：相对定位，用于控制子元素的绝对/固定定位基准，同时垂直居中排列
         <div
-            className="relative flex flex-col items-center"
+            className="relative flex flex-col items-center caret-transparent"
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
         >
@@ -40,9 +40,11 @@ export default function Logo() {
             >
                 {/* Logo 图片自适应铺满容器，保持原始比例不被拉伸 */}
                 <img
-                    src="/logo.png"
-                    alt="Logo"
+                    src="/logo.webp"
+                    loading="eager"
+                    decoding="async"
                     className="w-full h-full object-cover"
+                    fetchPriority="high"
                 />
             </div>
 

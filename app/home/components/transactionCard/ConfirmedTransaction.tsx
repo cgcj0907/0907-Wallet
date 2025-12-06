@@ -184,7 +184,7 @@ export default function ConfirmedTransaction({ address, network, token }: props)
                                     {isTokenTransfer ? (tx.tokenSymbol ?? 'TOKEN') : 'ETH'}
                                 </div>
                                 <div className={`${isIncoming ? 'text-green-700' : isOutgoing ? 'text-red-700' : 'text-sky-800'}`}>
-                                    {isIncoming ? '+' : isOutgoing ? '-' : ''} {Number(valueStr) >= 1 ? `${Number(valueStr).toLocaleString()} ${tokenSymbol}` : `${valueStr} ${tokenSymbol}`}
+                                    {isIncoming ? '+' : isOutgoing ? '-' : ''} {Number(valueStr) >= 1 ? `${Number(valueStr).toLocaleString()}` : `${valueStr}`}
                                 </div>
                             </div>
                             <div className="text-xs text-sky-600">{timeLabel}</div>

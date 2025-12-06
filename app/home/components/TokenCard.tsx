@@ -168,9 +168,8 @@ export default function TokenCard({ address, network, setTotalBalance }: Props) 
   };
 
   return (
-    <div className="p-4 space-y-4 min-h-80">
+    <div className="caret-transparent in-h-80">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold mb-2">Tokens</h2>
         {isTestnet && (
           <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">测试网</span>
         )}

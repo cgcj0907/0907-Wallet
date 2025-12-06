@@ -58,11 +58,9 @@ const Option = (props: OptionProps<AddressOption>) => {
               colors={["#FFFFFF", "#E3F2FD", "#90CAF9", "#42A5F5", "#1E88E5"]}
             />
           </div>
-          {isSelected && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-br from-sky-500 to-blue-500 rounded-full flex items-center justify-center shadow-md">
-              <i className="fa-solid fa-check text-white text-xs"></i>
-            </div>
-          )}
+          {isSelected && 
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-linear-to-br from-emerald-400 to-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
+          }
         </div>
         
         <div className="flex-1 min-w-0">
@@ -70,11 +68,6 @@ const Option = (props: OptionProps<AddressOption>) => {
             <div className="text-sm font-semibold text-sky-900 truncate">
               {data.label}
             </div>
-            {isSelected && (
-              <span className="text-xs font-medium bg-linear-to-r from-sky-100 to-blue-100 text-sky-700 px-2 py-0.5 rounded-full whitespace-nowrap border border-sky-200">
-                当前使用
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-2">
             <div className="text-xs text-sky-500 truncate font-mono bg-sky-50 px-2 py-1 rounded-md border border-sky-100">
@@ -115,7 +108,7 @@ const Menu = (props: any) => {
               </p>
             </div>
             <div className="w-8 h-8 rounded-lg bg-linear-to-br from-white to-sky-50 flex items-center justify-center shadow-sm border border-sky-100">
-              <i className="fa-solid fa-wallet text-sky-500 text-sm"></i>
+              <i className="fa-solid fa-repeat" style={{color: "#74C0FC"}}></i>
             </div>
           </div>
         </div>
@@ -260,7 +253,7 @@ export default function SwitchAccount({
       
       if (currentKey && addressesList.length > 0) {
         const currentItem = addressesList.find(item => item.key.toString() === currentKey);
-        console.log(currentItem)
+
         if (currentItem) {
           const option = {
             value: currentItem.key.toString(),
@@ -303,7 +296,7 @@ export default function SwitchAccount({
     if (option) {
       setSelectedOption(option);
       localStorage.setItem('currentAddressKeyPath', option.value);
-      console.log("change address")
+
       setAddressRecord(option.addressRecord);
     }
   };

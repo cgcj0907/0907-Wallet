@@ -113,7 +113,7 @@ export default function WalletHome() {
         )}
       </div>
 
-      <div className="text-center text-xs text-sky-400 ">0907 WORLD · 赞助</div>
+      <div className="mt-1 text-center text-xs text-gray-400 ">0907 WORLD · 赞助</div>
 
 
     </div>

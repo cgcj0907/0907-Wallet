@@ -48,7 +48,7 @@ export default function NetworkCard({
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="caret-transparent flex flex-col">
       <div className="flex">
         <button
           onClick={() => setShowNetworkCard(true)}

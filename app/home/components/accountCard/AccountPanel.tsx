@@ -4,6 +4,7 @@ import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 import SwitchAccount from './SwitchAccount';
 import { useRouter } from 'next/navigation';
 import { AddressRecord, modifyAddressName, getAddress } from '@/app/walletManagement/lib/saveAddress';
+import WalletDetails from './walletDetails';
 
 /* 打开区块链浏览器 */
 const openExplorer = async (addr?: string) => {
@@ -36,6 +37,7 @@ export default function AccountPanel({
     const [copied, setCopied] = useState(false);
     const [editingName, setEditingName] = useState(false);
     const [nameInput, setNameInput] = useState(addressRecord.name);
+    const [showDetails, setShowDetails] = useState(false);
     const router = useRouter();
 
     const handleCopy = async () => {
@@ -173,7 +175,21 @@ export default function AccountPanel({
                                 </div>
                                 <span className="text-sm font-medium">管理钱包</span>
                             </button>
+
+                            {/* 展示助记词/私钥按钮 - 占一整行 */}
+                            <button
+                                onClick={() => { setShowDetails(true) }}
+                                className="py-3 px-4 rounded-xl bg-white border border-sky-200 text-sky-700 flex items-center justify-center gap-2 hover:bg-sky-50 hover:border-sky-300 transition-all group col-span-2"
+                            >
+                                <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                                    <i className="fa-solid fa-key text-sky-500"></i>
+                                </div>
+                                <span className="text-sm font-medium">展示助记词/私钥</span>
+                            </button>
                         </div>
+                        {showDetails &&
+                            <WalletDetails setShowDetails={setShowDetails} />
+                        }
                     </div>
                 </div>
             )}

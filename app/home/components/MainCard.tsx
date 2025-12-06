@@ -6,6 +6,7 @@ import { getNetwork } from '@/app/networkManagement/lib/saveNetwork';
 
 import Transfer from './mainCard/transfer/Transfer';
 import Receive from './mainCard/receive/Receive';
+import TotalBalance from './mainCard/TotalBalance';
 
 
 type props = { 
@@ -46,12 +47,11 @@ export default function MainCard({ address, network, totalBalance }: props) {
 
     return (
 
-        <div className="bg-white border border-sky-200 rounded-2xl p-5 shadow-sm mb-5">
+        <div className="caret-transparent bg-white border border-sky-200 rounded-2xl p-5 shadow-sm mb-5">
             <div className="flex items-center justify-between">
                 <div>
                     <div className="text-2xl font-semibold text-sky-800 mt-1 ">
-                        <i className="fa-solid fa-dollar-sign"></i>
-                        <span>{totalBalance} USD</span>
+                        <TotalBalance usdAmount={totalBalance} />
                     </div>
 
                     <div className="text-sm ml-1.5 text-sky-500 mt-1 flex items-center gap-2">
