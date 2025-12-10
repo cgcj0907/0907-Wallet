@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/***************************************************************
+ *                                                             *
+ *      ┌─────────────────────────────────────────────┐      *
+ *      │  隐藏浏览器内建的密码显示/清除控件              *
+ *      └─────────────────────────────────────────────┘      *
+ *                                                             *
+ ***************************************************************/
+
+
+/* Edge / IE */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* Chrome / Chromium - 尝试覆盖内部装饰器（不同版本差异） */
+input[type="password"]::-webkit-textfield-decoration,
+input[type="password"]::-webkit-textfield-decoration-container,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Safari (iOS) 及部分 WebKit 变体 */
+input[type="password"]::-webkit-clear-button,
+input[type="password"]::-webkit-inner-spin-button {
+  display: none;
+}
+
+/* 通用去除外观，避免浏览器插入装饰 */
+input[type="password"] {
+  -webkit-appearance: none;
+  appearance: none;
+  /* 为你的自定义按钮预留空间（若你使用 Tailwind 的 pr-12 也可） */
+  padding-right: 3rem;
+}
+
+/* 防止 iOS Safari 自动填充按钮遮挡（尽可能） */
+input:-internal-autofill-selected,
+input:-webkit-autofill {
+  background-clip: padding-box;
+}
+
+/* globals.css */
+
+/* 全局隐藏滚动条（Chrome, Safari, Edge） */
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none; /* 隐藏滚动条 */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+/***************************************************************
+ *                                                             *
+ *      ┌─────────────────────────────────────────────┐      *
+ *      │  简单的按钮加载 Spinner                           *
+ *      └─────────────────────────────────────────────┘      *
+ *                                                             *
+ ***************************************************************/
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: rgba(255, 255, 255, 1);
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Spinner in dark / non-white button contexts (outline) */
+.spinner-dark {
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  border-top-color: rgba(0, 0, 0, 0.6);
+}
+
+
+
