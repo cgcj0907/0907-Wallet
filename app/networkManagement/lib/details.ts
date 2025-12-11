@@ -1,5 +1,5 @@
 export const TOKEN_LIST: Record<string, string[]> = {
-  ethereum: ['ethereum', 'usdt', 'usdc', 'dai', 'uni', 'aave', 'steth' ],
+  ethereum: ['ethereum', 'usdt', 'usdc', 'dai', 'uni', 'aave', 'steth'],
   sepolia: ['sepolia'],
   zksync: ['zksync'],
 };
@@ -83,4 +83,10 @@ export const ETHEREUM_TOKEN_ADDRESS: Record<string, string> = {
   dai: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
   uni: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
   steth: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+}
+
+
+export const AAVE_REWARDS_TOKEN: Record<string, [string, number]> = {
+  "0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a": ["aEthUSDT", 6],
+  "0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c": ["aEthUSDC", 6],
 }

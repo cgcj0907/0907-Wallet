@@ -179,6 +179,7 @@ export async function getLidoTVL() {
     })
     const priceOfeth = await getPrice('ethereum', 'ethereum');
     const tvl = Number(formatUnits(data, DECIMALS['ethereum'])) * priceOfeth;
+    console.log(tvl)
     return tvl;
 
 }

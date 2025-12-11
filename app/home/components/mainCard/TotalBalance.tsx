@@ -297,7 +297,7 @@ export default function TotalBalance({
             const existing = bucket[currency];
             const ONE_DAY = 24 * 60 * 60 * 1000;
 
-            if (!existing) {
+            if (!existing || bucket[currency].amount === 0) {
                 // 没有历史，写入当前作为基准
                 bucket[currency] = { amount: numericConverted, ts: now };
                 root[addrKey] = bucket;

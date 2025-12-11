@@ -4,12 +4,24 @@ import { useState, useEffect } from "react";
 import LidoCard from "./LidoCard";
 import AaveCard from "./AaveCard";
 import { getLidoTVL } from "@/app/chainInteraction/lib/lido";
+
 import { getAssetsOfaToken, getAssetsOfStkwaToken } from '@/app/chainInteraction/lib/aave';
 
 type Props = {
   setFinanceOpen: (value: boolean) => void,
   address: string | undefined,
 }
+
+type Balances = {
+  USDT: string,
+  USDC: string,
+  AUSDT: string,
+  AUSDC: string,
+  STKWAUSDC: string,
+  STKWAUSDT: string,
+}
+
+
 
 // 格式化TVL数字
 const formatTVL = (value: number): string => {
@@ -22,44 +34,47 @@ const formatTVL = (value: number): string => {
   }
 };
 
+
 // 获取Aave TVL - 包括aToken和stkwaToken
 const getAaveTotalTVL = async (): Promise<number> => {
+
   try {
     // 并行获取所有数据
     const [
-      aUsdcData, 
+      aUsdcData,
       aUsdtData,
       stkwaUsdcData,
       stkwaUsdtData
     ] = await Promise.all([
-      getAssetsOfaToken('usdc', '0x0000000000000000000000000000000000000000'),
-      getAssetsOfaToken('usdt', '0x0000000000000000000000000000000000000000'),
-      getAssetsOfStkwaToken('stkwausdc', '0x0000000000000000000000000000000000000000'),
-      getAssetsOfStkwaToken('stkwausdt', '0x0000000000000000000000000000000000000000')
+      getAssetsOfaToken('ausdc' ),
+      getAssetsOfaToken('ausdt'),
+      getAssetsOfStkwaToken('stkwausdc'),
+      getAssetsOfStkwaToken('stkwausdt')
     ]);
     let totalTVL = 0;
 
     // 累加 aToken USDC 池子资产
     if (aUsdcData && aUsdcData.length === 3) {
-      const [, poolAssets, ] = aUsdcData;
+      const [, poolAssets,] = aUsdcData;
+
       totalTVL += poolAssets;
     }
 
     // 累加 aToken USDT 池子资产
     if (aUsdtData && aUsdtData.length === 3) {
-      const [, poolAssets, ] = aUsdtData;
+      const [, poolAssets,] = aUsdtData;
       totalTVL += poolAssets;
     }
 
     // 累加 stkwaToken USDC 池子资产
     if (stkwaUsdcData && stkwaUsdcData.length === 3) {
-      const [, poolAssets, ] = stkwaUsdcData;
+      const [, poolAssets,] = stkwaUsdcData;
       totalTVL += poolAssets;
     }
 
     // 累加 stkwaToken USDT 池子资产
     if (stkwaUsdtData && stkwaUsdtData.length === 3) {
-      const [, poolAssets, ] = stkwaUsdtData;
+      const [, poolAssets,] = stkwaUsdtData;
       totalTVL += poolAssets;
     }
 
@@ -75,24 +90,28 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
   const [lidoTVL, setLidoTVL] = useState<number>(0);
   const [aaveTVL, setAaveTVL] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+
   const [activeProject, setActiveProject] = useState<string>('overview');
 
   // 获取TVL数据
   useEffect(() => {
     const fetchTVLData = async () => {
       try {
+
         setLoading(true);
+
 
         // 并行获取Lido和Aave的TVL
         const [rawLidoTvl, aaveTotalTVL] = await Promise.all([
           getLidoTVL(),
-          getAaveTotalTVL()
+          getAaveTotalTVL(),
         ]);
-
+        console.log(rawLidoTvl)
         // 设置Lido TVL
         setLidoTVL(rawLidoTvl);
         // 设置Aave TVL（包括aToken和stkwaToken）
         setAaveTVL(aaveTotalTVL);
+
       } catch (error) {
         console.error('获取TVL数据失败:', error);
         // 设置默认值
@@ -104,22 +123,22 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
     };
 
     fetchTVLData();
-  }, []);
+  }, [address]);
 
   // Lido logo组件
   const LidoLogo = () => (
-    <img 
-      src="/defi/lido.svg" 
-      alt="Lido Logo" 
+    <img
+      src="/defi/lido.svg"
+      alt="Lido Logo"
       className="w-8 h-8"
     />
   );
 
   // Aave logo组件
   const AaveLogo = () => (
-    <img 
-      src="/defi/aave.svg" 
-      alt="Aave Logo" 
+    <img
+      src="/defi/aave.svg"
+      alt="Aave Logo"
       className="w-8 h-8"
     />
   );
@@ -129,24 +148,24 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
     <div className="flex space-x-2 mb-4 overflow-x-auto pb-2">
       <button
         onClick={() => setActiveProject('overview')}
-        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeProject === 'overview' 
-          ? 'bg-blue-500 text-white' 
+        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeProject === 'overview'
+          ? 'bg-blue-500 text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
       >
         总览
       </button>
       <button
         onClick={() => setActiveProject('lido')}
-        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeProject === 'lido' 
-          ? 'bg-amber-500 text-white' 
+        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeProject === 'lido'
+          ? 'bg-amber-500 text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
       >
         Lido
       </button>
       <button
         onClick={() => setActiveProject('aave')}
-        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeProject === 'aave' 
-          ? 'bg-indigo-500 text-white' 
+        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeProject === 'aave'
+          ? 'bg-indigo-500 text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
       >
         Aave
@@ -164,7 +183,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
               <h1 className="text-xl font-bold">DeFi</h1>
               <p className="text-sky-100 text-sm">探索去中心化金融项目</p>
             </div>
-            
+
             <button
               onClick={() => setFinanceOpen(false)}
               className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
@@ -174,7 +193,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
             </button>
           </div>
         </div>
-        
+
         <div className="flex flex-col items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
           <span className="text-sm text-gray-600">加载DeFi数据...</span>
@@ -286,7 +305,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
                     >
                       <i className="fa-solid fa-arrow-left text-white"></i>
                     </button>
-                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <div className="w-10 h-10 flex items-center justify-center">
                       <LidoLogo />
                     </div>
                     <div>
@@ -300,7 +319,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
                 </div>
               </div>
               <div className="p-4">
-                <LidoCard 
+                <LidoCard
                   address={address}
                   tvl={formatTVL(lidoTVL)}
                 />
@@ -322,7 +341,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
                     >
                       <i className="fa-solid fa-arrow-left text-white"></i>
                     </button>
-                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <div className="w-10 h-10  flex items-center justify-center">
                       <AaveLogo />
                     </div>
                     <div>
@@ -336,7 +355,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
                 </div>
               </div>
               <div className="p-4">
-                <AaveCard 
+                <AaveCard
                   address={address}
                   tvl={formatTVL(aaveTVL)}
                 />
@@ -361,7 +380,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
             <h1 className="text-xl font-bold">DeFi</h1>
             <p className="text-sky-100 text-sm">探索去中心化金融项目</p>
           </div>
-          
+
           {/* 关闭按钮 */}
           <button
             onClick={() => setFinanceOpen(false)}

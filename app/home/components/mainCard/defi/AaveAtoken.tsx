@@ -9,7 +9,8 @@ interface AaveTokenInfo {
   hasStaked: boolean;
   userAssets: string;
   poolAssets: string;
-  balance: string;
+  tokenBalance: string;
+  atokenBalance: string;
   tokenSymbol: string;
   tokenName: string;
   price: string | null;
@@ -49,31 +50,15 @@ const formatCompactNumber = (num: number): string => {
 
 export default function AaveAtoken({ info, scheme }: Props) {
   const [showActions, setShowActions] = useState(false)
+  const [mode, setMode] = useState<string>("");
 
-  const primaryColor = scheme === 'usdc' ? 'blue' : 'green'
-  const secondaryColor = scheme === 'usdc' ? 'cyan' : 'emerald'
-
-  // 处理按钮样式
-  const getButtonClass = (type: 'primary' | 'secondary' | 'danger' | 'outline') => {
-    const baseClass = 'px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm'
-
-    switch (type) {
-      case 'primary':
-        return `${baseClass} bg-${primaryColor}-600 hover:bg-${primaryColor}-700 text-white shadow-md hover:shadow-lg`;
-      case 'secondary':
-        return `${baseClass} bg-${secondaryColor}-500 hover:bg-${secondaryColor}-600 text-white shadow-md hover:shadow-lg`;
-      case 'danger':
-        return `${baseClass} bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg`;
-      case 'outline':
-        return `${baseClass} border border-${primaryColor}-300 bg-white text-${primaryColor}-700 hover:bg-${primaryColor}-50`;
-      default:
-        return baseClass;
-    }
-  }
+  // 统一使用淡紫色调，美化整体配色方案
+  const primaryColor = 'blue'; // 主色：紫色
+  const secondaryColor = 'skyblue'; // 辅助色：淡紫/紫罗兰
 
   return (
     <>
-      <div className={`p-4 bg-linear-to-r from-${primaryColor}-50 to-${secondaryColor}-50 rounded-xl border border-${primaryColor}-200`}>
+      <div className={`p-4 bg-linear-to-r from-${primaryColor}-50 to-${secondaryColor}-50 rounded-xl border border-${primaryColor}-200 shadow-md transition-shadow hover:shadow-lg`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className={`w-3 h-3 rounded-full bg-${primaryColor}-500`} />
@@ -87,7 +72,7 @@ export default function AaveAtoken({ info, scheme }: Props) {
             <button
               type="button"
               onClick={() => setShowActions(!showActions)}
-              className={`ml-2 text-xs px-3 py-1 rounded-md border border-${primaryColor}-200 hover:bg-${primaryColor}-50`}
+              className={`ml-2 text-xs px-3 py-1 rounded-md border border-${primaryColor}-300 bg-${primaryColor}-50 hover:bg-${primaryColor}-100 transition-colors`}
             >
               {showActions ? '收起' : '操作'}
             </button>
@@ -101,16 +86,14 @@ export default function AaveAtoken({ info, scheme }: Props) {
               {info ? formatCompactNumber(Number(info.poolAssets)) : '$0.00'}
             </div>
           </div>
-          <div className="flex flex-col space-y-1">
+          <div className="space-y-1">
             <div className={`text-xs text-${primaryColor}-600`}>您的质押</div>
-            <div className='flex'>
+            <div className='flex flex-col'>
               <div className={`font-bold text-${primaryColor}-800`}>
-                资产总值
-                {info?.hasStaked ? formatCompactNumber(Number(info.userAssets)) : '$0.00'}
+                资产总值: {info?.hasStaked ? formatCompactNumber(Number(info.userAssets)) : '$0.00'}
               </div>
               <div className={`font-bold text-${primaryColor}-800`}>
-                代币数量
-                {info?.hasStaked ? info.balance : '0.00'}
+                代币数量: {info?.hasStaked ? info.atokenBalance : '0.00'}
               </div>
             </div>
           </div>
@@ -129,62 +112,27 @@ export default function AaveAtoken({ info, scheme }: Props) {
 
         {/* 操作按钮组 - 点击"操作"时显示 */}
         {showActions && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-${primaryColor}-200">
             <div className="flex flex-col gap-2">
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => {/* 质押逻辑 */ }}
-                  className={getButtonClass('primary')}
+                  onClick={() => {setMode('stake')}}
+                  className={`px-4 py-2 rounded-md bg-${primaryColor}-300 hover:bg-${primaryColor}-400 text-${primaryColor}-800 font-medium transition-colors`}
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
                     质押
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => {/* 赎回逻辑 */ }}
-                  className={getButtonClass('secondary')}
+                  onClick={() => {setMode('redeem')}}
+                  className={`px-4 py-2 rounded-md bg-${primaryColor}-300 hover:bg-${primaryColor}-400 text-${primaryColor}-800 font-medium transition-colors`}
                   disabled={!info?.hasStaked}
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                    </svg>
                     赎回
-                  </div>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {/* 领取收益逻辑 */ }}
-                  className={getButtonClass('outline')}
-                  disabled={!info?.hasStaked}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    领取收益
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {/* 查看详情逻辑 */ }}
-                  className={getButtonClass('outline')}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    查看详情
                   </div>
                 </button>
               </div>
@@ -194,8 +142,8 @@ export default function AaveAtoken({ info, scheme }: Props) {
 
         {/* 如果用户未质押，显示质押提示 */}
         {!info?.hasStaked && !showActions && (
-          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="flex items-center gap-2 text-sm text-amber-800">
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-blue-800">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -207,7 +155,7 @@ export default function AaveAtoken({ info, scheme }: Props) {
         {/* 直接渲染 AaveAtokenForm，不再使用模态框 */}
         {showActions && (
           <div className="mt-4">
-            <AaveAtokenForm scheme={scheme} />
+            <AaveAtokenForm scheme={scheme} mode={mode} />
           </div>
         )}
       </div>

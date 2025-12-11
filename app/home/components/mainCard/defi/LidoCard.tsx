@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { getLidoApr, getRewardsHistory } from "@/app/chainInteraction/lib/lido";
 import LidoForm from "./LidoForm";
 
+
+
 // 用户Lido质押详细信息接口
 interface LidoUserInfo {
   hasStaked: boolean;
@@ -33,6 +35,7 @@ interface LidoRealTimeData {
 
 type Props = {
   address: string | undefined;
+
   tvl: string;
 };
 
