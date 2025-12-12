@@ -9,6 +9,7 @@ import { getAssetsOfaToken, getAssetsOfStkwaToken } from '@/app/chainInteraction
 
 type Props = {
   setFinanceOpen: (value: boolean) => void,
+  network: string | null,
   address: string | undefined,
 }
 
@@ -86,7 +87,7 @@ const getAaveTotalTVL = async (): Promise<number> => {
   }
 };
 
-export default function DeFi({ setFinanceOpen, address }: Props) {
+export default function DeFi({ setFinanceOpen, network, address }: Props) {
   const [lidoTVL, setLidoTVL] = useState<number>(0);
   const [aaveTVL, setAaveTVL] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -321,6 +322,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
               <div className="p-4">
                 <LidoCard
                   address={address}
+                  network={network}
                   tvl={formatTVL(lidoTVL)}
                 />
               </div>
@@ -357,6 +359,7 @@ export default function DeFi({ setFinanceOpen, address }: Props) {
               <div className="p-4">
                 <AaveCard
                   address={address}
+                  network={network}
                   tvl={formatTVL(aaveTVL)}
                 />
               </div>

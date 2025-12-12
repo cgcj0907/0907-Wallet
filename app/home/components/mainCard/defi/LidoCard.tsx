@@ -35,11 +35,11 @@ interface LidoRealTimeData {
 
 type Props = {
   address: string | undefined;
-
+  network: string | null;
   tvl: string;
 };
 
-export default function LidoCard({ address, tvl }: Props) {
+export default function LidoCard({ address, network, tvl }: Props) {
   const [lidoRealTimeData, setLidoRealTimeData] = useState<LidoRealTimeData>({
     apr: 0,
     loading: true,

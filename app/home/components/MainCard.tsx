@@ -185,7 +185,7 @@ export default function MainCard({ address, network, totalBalance }: props) {
 
                     {/* 抽屉内容 */}
                     <div className={`absolute right-0 top-0 h-full w-full max-w-md  transform transition-transform duration-300 ease-in-out ${financeOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                        <DeFi setFinanceOpen={setFinanceOpen} address={address} />
+                        <DeFi setFinanceOpen={setFinanceOpen} network={network} address={address} />
                     </div>
                 </div>
             </div>

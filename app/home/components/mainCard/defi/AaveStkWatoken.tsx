@@ -19,6 +19,7 @@ interface AaveTokenInfo {
 
 type Props = {
     address: string | undefined;
+    network: string | null;
     info: AaveTokenInfo | null;
     scheme: 'usdc' | 'usdt';
 };
@@ -49,7 +50,7 @@ const formatCompactNumber = (num: number): string => {
     return `$${num.toFixed(2)}`;
 };
 
-export default function AaveStkWatoken({ address, info, scheme }: Props) {
+export default function AaveStkWatoken({ address, network, info, scheme }: Props) {
     const [showActions, setShowActions] = useState(false);
     const [mode, setMode] = useState<string>("")
 
@@ -181,7 +182,7 @@ export default function AaveStkWatoken({ address, info, scheme }: Props) {
                 {/* 直接渲染 AaveStkWatokenForm，不再使用模态框 */}
                 {showActions && (
                     <div className="mt-4">
-                        <AaveStkWatokenForm address={address} info={info} mode={mode} scheme={scheme} />
+                        <AaveStkWatokenForm address={address} network={network} info={info} mode={mode} scheme={scheme} />
                     </div>
                 )}
             </div>

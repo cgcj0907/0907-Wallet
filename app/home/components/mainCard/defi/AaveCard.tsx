@@ -50,11 +50,12 @@ type Balances = {
 
 type Props = {
     address: string | undefined;
+    network: string | null;
     tvl: string; // 注意：这个 tvl 现在可能不需要了，我们自己计算
 };
 
 
-export default function AaveCard({ address, tvl }: Props) {
+export default function AaveCard({ address, network, tvl }: Props) {
     const [aaveRealTimeData, setAaveRealTimeData] = useState<AaveRealTimeData>({
         loading: true,
         error: null
@@ -348,8 +349,8 @@ export default function AaveCard({ address, tvl }: Props) {
                     </div>
 
                     <div className="space-y-4">
-                        <AaveStkWatoken address={address} info={stkwaUsdcInfo} scheme="usdc" />
-                        <AaveStkWatoken address={address} info={stkwaUsdtInfo} scheme="usdt" />
+                        <AaveStkWatoken address={address} network={network} info={stkwaUsdcInfo} scheme="usdc" />
+                        <AaveStkWatoken address={address} network={network} info={stkwaUsdtInfo} scheme="usdt" />
                     </div>
                 </div>
 

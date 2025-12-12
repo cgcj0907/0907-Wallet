@@ -8,6 +8,7 @@ import { AAVE_REWARDS_TOKEN } from "@/app/networkManagement/lib/details";
 
 interface AaveFormProps {
   address: string | undefined;
+  network: string | null;
   info: AaveTokenInfo | null;
   scheme?: 'usdc' | 'usdt';
   mode: string;
@@ -35,7 +36,7 @@ interface AaveTokenInfo {
 }
 
 
-export default function AaveStkWatokenForm({ address, info, scheme = 'usdc', mode }: AaveFormProps) {
+export default function AaveStkWatokenForm({ address, network, info, scheme = 'usdc', mode }: AaveFormProps) {
   const [tokenType, setTokenType] = useState<'usdc' | 'ausdc' | 'usdt' | 'ausdt'>(scheme === 'usdc' ? 'usdc' : 'usdt');
   const [amountIn, setAmountIn] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -305,6 +306,23 @@ export default function AaveStkWatokenForm({ address, info, scheme = 'usdc', mod
       const amountBigInt = parseAmountToBigInt(amountIn);
 
       const hash = await convertToStkwaToken(keyPath, password, amountBigInt, tokenType);
+            const storeKey = `pending_hashes_${network}_${address}`
+      if (hash) {
+        // 1. 先读 localStorage
+        const saved = localStorage.getItem(storeKey);
+        let pending: string[] = [];
+
+        try {
+          pending = saved ? JSON.parse(saved) : [];
+        } catch {
+          pending = [];
+        }
+
+        // 2. 加进去（去重）
+        const updated = [...new Set([...pending, hash])];
+        // 3. 写回 localStorage
+        localStorage.setItem(storeKey, JSON.stringify(updated));
+      }
 
       setTxResult(String(hash));
 
